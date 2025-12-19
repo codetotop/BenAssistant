@@ -1,18 +1,19 @@
 package com.example.kaiaassistant
 
-import com.example.kaiaassistant.data.ChatLog
-import com.example.kaiaassistant.data.Role
+import com.example.kaiaassistant.room.ChatLog
+import com.example.kaiaassistant.room.Role
 import com.example.kaiaassistant.repository.ChatRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
 class MainPresenter(
     private var view: MainContract.View? = null,
-    private val repository: ChatRepository,
-    private val coroutineScope: CoroutineScope = MainScope()
+    private val repository: ChatRepository
 ) : MainContract.Presenter {
+
+    private val job = SupervisorJob()
+    private val coroutineScope = CoroutineScope(Dispatchers.Main + job)
+
+    private var requestJob: Job? = null
 
     override fun attach(view: MainContract.View) {
         this.view = view
@@ -40,22 +41,34 @@ class MainPresenter(
         view?.clearInput()
         view?.showLoading()
 
-        coroutineScope.launch {
+        // Cancel previous request
+        requestJob?.cancel()
+
+        requestJob = coroutineScope.launch {
             try {
                 repository.processUserMessage(msg)
+
                 val logs = repository.getTodayLogs()
                 view?.showMessages(logs)
                 view?.scrollToBottom()
+
+            } catch (e: CancellationException) {
+                // ✅ cancel hợp lệ (user gửi msg mới / screen destroy)
+                return@launch
+
             } catch (e: Exception) {
                 view?.showError("Có lỗi xảy ra")
             } finally {
-                view?.hideLoading()
+                // chỉ hide loading nếu job này vẫn là job hiện tại
+                if (requestJob == this@launch) {
+                    view?.hideLoading()
+                }
             }
         }
     }
 
     override fun detach() {
         view = null
-        coroutineScope.cancel()
+        job.cancel()
     }
 }

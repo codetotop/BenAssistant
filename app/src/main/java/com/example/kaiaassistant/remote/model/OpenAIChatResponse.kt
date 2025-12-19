@@ -1,6 +1,6 @@
-package com.example.kaiaassistant.remote
+package com.example.kaiaassistant.remote.model
 
-data class ChatCompletionResponse(
+data class ChatResponse(
     val choices: List<Choice>
 )
 

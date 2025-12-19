@@ -1,4 +1,4 @@
-package com.example.kaiaassistant.data
+package com.example.kaiaassistant.room
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

@@ -1,4 +1,4 @@
-package com.example.kaiaassistant.data
+package com.example.kaiaassistant.room
 
 import android.content.Context
 import androidx.room.Database

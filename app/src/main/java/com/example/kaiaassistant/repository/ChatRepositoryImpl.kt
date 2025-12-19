@@ -3,17 +3,17 @@ package com.example.kaiaassistant.repository
 import com.example.kaiaassistant.AssistantIntent
 import com.example.kaiaassistant.agent.AlarmAgent
 import com.example.kaiaassistant.agent.MapAgent
-import com.example.kaiaassistant.data.ChatLog
-import com.example.kaiaassistant.data.ChatLogDao
-import com.example.kaiaassistant.data.Role
-import com.example.kaiaassistant.llm.LLMClient
+import com.example.kaiaassistant.room.ChatLog
+import com.example.kaiaassistant.room.ChatLogDao
+import com.example.kaiaassistant.room.Role
 import com.example.kaiaassistant.llm.LLMMessage
+import com.example.kaiaassistant.llm.LlmRouter
 import org.json.JSONObject
 import java.time.LocalDate
 import java.time.ZoneId
 
 class ChatRepositoryImpl(
-    private val llmClient: LLMClient,
+    private val llmRouter: LlmRouter,
     private val alarmAgent: AlarmAgent,
     private val mapAgent: MapAgent,
     private val chatDao: ChatLogDao
@@ -66,7 +66,7 @@ Chỉ trả về JSON, không thêm giải thích.
         )
 
         // 2. Call LLM
-        val response = llmClient.chat(buildPrompt(message))
+        val response = llmRouter.chat(true, buildPrompt(message))
         val intent = parseIntent(response)
 
         // 3. Handle intent + save assistant message

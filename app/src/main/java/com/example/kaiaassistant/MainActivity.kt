@@ -18,11 +18,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.kaiaassistant.agent.AlarmAgentImpl
 import com.example.kaiaassistant.agent.MapAgentImpl
-import com.example.kaiaassistant.data.AppDatabase
-import com.example.kaiaassistant.data.ChatLog
-import com.example.kaiaassistant.llm.LLMClient
-import com.example.kaiaassistant.llm.OpenAILLMClient
+import com.example.kaiaassistant.llm.LlmRouterFactory
 import com.example.kaiaassistant.repository.ChatRepositoryImpl
+import com.example.kaiaassistant.room.AppDatabase
+import com.example.kaiaassistant.room.ChatLog
+import com.example.kaiaassistant.room.Role
 
 class MainActivity : AppCompatActivity(), MainContract.View {
 
@@ -42,13 +42,11 @@ class MainActivity : AppCompatActivity(), MainContract.View {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-        val llmClient: LLMClient = OpenAILLMClient(
-            apiKey = BuildConfig.OPENAI_API_KEY
-        )
+        val llmRouter = LlmRouterFactory.create(this)
 
         presenter = MainPresenter(
             repository = ChatRepositoryImpl(
-                llmClient = llmClient,
+                llmRouter = llmRouter,
                 chatDao = AppDatabase.getInstance(this).chatLogDao(),
                 alarmAgent = AlarmAgentImpl(this),
                 mapAgent = MapAgentImpl(this)
@@ -168,7 +166,9 @@ class MainActivity : AppCompatActivity(), MainContract.View {
     }
 
     override fun showError(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        addMessage(ChatLog(role = Role.ASSISTANT, message = "Có lỗi xảy ra"))
+        scrollToBottom()
+        //Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     override fun showMessages(messages: List<ChatLog>) {

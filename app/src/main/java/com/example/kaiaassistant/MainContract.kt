@@ -1,6 +1,6 @@
 package com.example.kaiaassistant
 
-import com.example.kaiaassistant.data.ChatLog
+import com.example.kaiaassistant.room.ChatLog
 
 interface MainContract {
 

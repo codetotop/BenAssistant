@@ -1,4 +1,4 @@
-package com.example.kaiaassistant.remote
+package com.example.kaiaassistant.remote.openai
 
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
