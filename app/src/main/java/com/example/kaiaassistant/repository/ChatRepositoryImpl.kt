@@ -9,6 +9,8 @@ import com.example.kaiaassistant.data.Role
 import com.example.kaiaassistant.llm.LLMClient
 import com.example.kaiaassistant.llm.LLMMessage
 import org.json.JSONObject
+import java.time.LocalDate
+import java.time.ZoneId
 
 class ChatRepositoryImpl(
     private val llmClient: LLMClient,
@@ -35,6 +37,18 @@ Open Map:
 Chỉ trả về JSON, không thêm giải thích.
 """
 
+    }
+
+    fun todayRangeMillis(): Pair<Long, Long> {
+        val zone = ZoneId.systemDefault()
+        val today = LocalDate.now(zone)
+        val start = today.atStartOfDay(zone).toInstant().toEpochMilli()
+        val end = today.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() - 1
+        return start to end
+    }
+
+    override suspend fun getTodayLogs() = todayRangeMillis().let { (start, end) ->
+        chatDao.getTodayLogs(start, end)
     }
 
     override suspend fun getChatLogs(): List<ChatLog> {

@@ -22,6 +22,7 @@ interface MainContract {
         fun attach(view: View)
         fun detach()
         fun onUserSendMessage(text: String)
-        fun loadMessages()
+        fun loadTodayMessages()
+        fun loadAllMessages()
     }
 }

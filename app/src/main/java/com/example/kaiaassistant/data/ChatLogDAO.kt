@@ -3,10 +3,12 @@ package com.example.kaiaassistant.data
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ChatLogDao {
+
+    @Query("SELECT * FROM chat_log WHERE timestamp BETWEEN :startOfDay AND :endOfDay ORDER BY timestamp ASC")
+    suspend fun getTodayLogs(startOfDay: Long, endOfDay: Long): List<ChatLog>
 
     @Query("SELECT * FROM chat_log ORDER BY timestamp ASC")
     suspend fun getLogs(): List<ChatLog>

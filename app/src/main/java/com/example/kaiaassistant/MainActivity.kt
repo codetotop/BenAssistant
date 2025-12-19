@@ -1,11 +1,13 @@
 package com.example.kaiaassistant
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -29,6 +31,7 @@ class MainActivity : AppCompatActivity(), MainContract.View {
     private lateinit var rootView: ConstraintLayout
     private lateinit var inputLayout: LinearLayout
     private lateinit var etInput: EditText
+    private lateinit var btnRecent: TextView
     private lateinit var btnVoice: ImageButton
     private lateinit var btnSend: ImageButton
     private lateinit var recyclerView: RecyclerView
@@ -58,11 +61,13 @@ class MainActivity : AppCompatActivity(), MainContract.View {
         firstSetup()
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun initView() {
         rootView = findViewById(R.id.main)
         recyclerView = findViewById(R.id.recyclerViewChat)
         inputLayout = findViewById(R.id.inputLayout)
         etInput = findViewById(R.id.etInput)
+        btnRecent = findViewById(R.id.btnRecent)
         btnVoice = findViewById(R.id.btnVoice)
         btnSend = findViewById(R.id.btnSend)
 
@@ -85,6 +90,14 @@ class MainActivity : AppCompatActivity(), MainContract.View {
                 }
             }
         })
+
+        btnRecent.setOnClickListener {
+            presenter.loadAllMessages()
+        }
+
+        recyclerView.setOnClickListener {
+            hideKeyboard()
+        }
 
         btnVoice.setOnClickListener {
 
@@ -122,8 +135,8 @@ class MainActivity : AppCompatActivity(), MainContract.View {
             }
             // 4. Set padding for rcvChat
             recyclerView.setPadding(
-                recyclerView.paddingRight,
-                recyclerView.paddingRight,
+                recyclerView.paddingLeft,
+                recyclerView.paddingTop,
                 recyclerView.paddingRight,
                 bottomPadding
             )
@@ -133,6 +146,7 @@ class MainActivity : AppCompatActivity(), MainContract.View {
                 .setDuration(150)
                 .start()
 
+            scrollToBottom()
             insets
         }
 
@@ -159,6 +173,12 @@ class MainActivity : AppCompatActivity(), MainContract.View {
 
     override fun showMessages(messages: List<ChatLog>) {
         adapter.submitList(messages)
+    }
+
+    private fun hideKeyboard() {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val view = currentFocus ?: etInput
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
     override fun clearInput() {

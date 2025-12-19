@@ -16,10 +16,18 @@ class MainPresenter(
 
     override fun attach(view: MainContract.View) {
         this.view = view
-        loadMessages()
+        loadTodayMessages()
     }
 
-    override fun loadMessages() {
+    override fun loadTodayMessages() {
+        coroutineScope.launch {
+            val logs = repository.getTodayLogs()
+            view?.showMessages(logs)
+            view?.scrollToBottom()
+        }
+    }
+
+    override fun loadAllMessages() {
         coroutineScope.launch {
             val logs = repository.getChatLogs()
             view?.showMessages(logs)
@@ -35,7 +43,7 @@ class MainPresenter(
         coroutineScope.launch {
             try {
                 repository.processUserMessage(msg)
-                val logs = repository.getChatLogs()
+                val logs = repository.getTodayLogs()
                 view?.showMessages(logs)
                 view?.scrollToBottom()
             } catch (e: Exception) {

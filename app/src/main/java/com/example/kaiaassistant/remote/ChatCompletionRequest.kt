@@ -1,7 +1,7 @@
 package com.example.kaiaassistant.remote
 
 data class ChatCompletionRequest(
-    val model: String = "gpt-4o-mini",
+    val model: String = "gpt-5.1",
     val messages: List<ChatMessage>,
     val temperature: Double = 0.2
 )
