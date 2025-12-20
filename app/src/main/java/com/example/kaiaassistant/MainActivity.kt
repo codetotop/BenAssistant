@@ -3,10 +3,14 @@ package com.example.kaiaassistant
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
+import android.view.Gravity
+import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -22,7 +26,6 @@ import com.example.kaiaassistant.llm.LlmRouterFactory
 import com.example.kaiaassistant.repository.ChatRepositoryImpl
 import com.example.kaiaassistant.room.AppDatabase
 import com.example.kaiaassistant.room.ChatLog
-import com.example.kaiaassistant.room.Role
 
 class MainActivity : AppCompatActivity(), MainContract.View {
 
@@ -31,10 +34,14 @@ class MainActivity : AppCompatActivity(), MainContract.View {
     private lateinit var rootView: ConstraintLayout
     private lateinit var inputLayout: LinearLayout
     private lateinit var etInput: EditText
-    private lateinit var btnRecent: TextView
+    private lateinit var btnRemove: TextView
     private lateinit var btnVoice: ImageButton
     private lateinit var btnSend: ImageButton
     private lateinit var recyclerView: RecyclerView
+
+    // Loading overlay
+    private lateinit var loadingOverlay: FrameLayout
+    private lateinit var progressBar: ProgressBar
 
     private lateinit var adapter: ChatAdapter
 
@@ -56,6 +63,7 @@ class MainActivity : AppCompatActivity(), MainContract.View {
         presenter.attach(this)
 
         initView()
+        setupLoading()
         firstSetup()
     }
 
@@ -65,7 +73,7 @@ class MainActivity : AppCompatActivity(), MainContract.View {
         recyclerView = findViewById(R.id.recyclerViewChat)
         inputLayout = findViewById(R.id.inputLayout)
         etInput = findViewById(R.id.etInput)
-        btnRecent = findViewById(R.id.btnRecent)
+        btnRemove = findViewById(R.id.btnRemove)
         btnVoice = findViewById(R.id.btnVoice)
         btnSend = findViewById(R.id.btnSend)
 
@@ -89,8 +97,8 @@ class MainActivity : AppCompatActivity(), MainContract.View {
             }
         })
 
-        btnRecent.setOnClickListener {
-            presenter.loadAllMessages()
+        btnRemove.setOnClickListener {
+            presenter.removeAll()
         }
 
         recyclerView.setOnClickListener {
@@ -155,10 +163,43 @@ class MainActivity : AppCompatActivity(), MainContract.View {
         }
     }
 
+    // Create a full-screen overlay with a centered ProgressBar
+    private fun setupLoading() {
+        loadingOverlay = FrameLayout(this).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+            setBackgroundColor(0x66000000) // semi-transparent black
+            visibility = View.GONE
+            isClickable = true
+            isFocusable = true
+        }
+
+        progressBar = ProgressBar(this).apply {
+            val size = (48 * resources.displayMetrics.density).toInt()
+            layoutParams = FrameLayout.LayoutParams(size, size, Gravity.CENTER)
+        }
+
+        loadingOverlay.addView(progressBar)
+
+        // Add overlay to root container
+        if (rootView.parent is FrameLayout) {
+            (rootView.parent as FrameLayout).addView(loadingOverlay)
+        } else {
+            // Wrap rootView inside a FrameLayout to host the overlay
+            val content = rootView.parent as FrameLayout
+            content.addView(loadingOverlay)
+        }
+    }
+
     override fun showLoading() {
+        hideKeyboard()
+        loadingOverlay.visibility = View.VISIBLE
     }
 
     override fun hideLoading() {
+        loadingOverlay.visibility = View.GONE
     }
 
     override fun addMessage(message: ChatLog) {
@@ -166,12 +207,12 @@ class MainActivity : AppCompatActivity(), MainContract.View {
     }
 
     override fun showError(message: String) {
-        addMessage(ChatLog(role = Role.ASSISTANT, message = "Có lỗi xảy ra"))
+        //addMessage(ChatLog(role = Role.ASSISTANT, message = "Có lỗi xảy ra"))
         scrollToBottom()
-        //Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
-    override fun showMessages(messages: List<ChatLog>) {
+    override fun showMessages(messages: List<ChatLog>?) {
         adapter.submitList(messages)
     }
 

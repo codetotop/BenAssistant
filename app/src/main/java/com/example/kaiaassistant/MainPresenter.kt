@@ -17,21 +17,22 @@ class MainPresenter(
 
     override fun attach(view: MainContract.View) {
         this.view = view
-        loadTodayMessages()
+        loadMessages()
     }
 
-    override fun loadTodayMessages() {
+    override fun loadMessages() {
         coroutineScope.launch {
-            val logs = repository.getTodayLogs()
+            repository.clearExpiredLogs()
+            val logs = repository.getChatLogs()
             view?.showMessages(logs)
             view?.scrollToBottom()
         }
     }
 
-    override fun loadAllMessages() {
+    override fun removeAll() {
         coroutineScope.launch {
-            val logs = repository.getChatLogs()
-            view?.showMessages(logs)
+            repository.clearAll()
+            view?.showMessages()
             view?.scrollToBottom()
         }
     }
@@ -48,12 +49,12 @@ class MainPresenter(
             try {
                 repository.processUserMessage(msg)
 
-                val logs = repository.getTodayLogs()
+                val logs = repository.getChatLogs()
                 view?.showMessages(logs)
                 view?.scrollToBottom()
 
             } catch (e: CancellationException) {
-                // ✅ cancel hợp lệ (user gửi msg mới / screen destroy)
+                //cancel hợp lệ (user gửi msg mới / screen destroy)
                 return@launch
 
             } catch (e: Exception) {

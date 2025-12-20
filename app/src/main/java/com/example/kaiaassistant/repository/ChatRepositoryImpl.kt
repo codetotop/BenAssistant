@@ -3,14 +3,12 @@ package com.example.kaiaassistant.repository
 import com.example.kaiaassistant.AssistantIntent
 import com.example.kaiaassistant.agent.AlarmAgent
 import com.example.kaiaassistant.agent.MapAgent
+import com.example.kaiaassistant.llm.LLMMessage
+import com.example.kaiaassistant.llm.LlmRouter
 import com.example.kaiaassistant.room.ChatLog
 import com.example.kaiaassistant.room.ChatLogDao
 import com.example.kaiaassistant.room.Role
-import com.example.kaiaassistant.llm.LLMMessage
-import com.example.kaiaassistant.llm.LlmRouter
 import org.json.JSONObject
-import java.time.LocalDate
-import java.time.ZoneId
 
 class ChatRepositoryImpl(
     private val llmRouter: LlmRouter,
@@ -32,28 +30,19 @@ Set Alarm:
 { "type": "set_alarm", "hour": 7, "minute": 0, "label": "Đi làm" }
 
 Open Map:
-{ "type": "open_map", "destination": "Bệnh viện Đại học Y" }
+{ "type": "open_map", "destination": "Sân bay Nội Bài" }
 
 Chỉ trả về JSON, không thêm giải thích.
 """
 
     }
 
-    fun todayRangeMillis(): Pair<Long, Long> {
-        val zone = ZoneId.systemDefault()
-        val today = LocalDate.now(zone)
-        val start = today.atStartOfDay(zone).toInstant().toEpochMilli()
-        val end = today.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() - 1
-        return start to end
-    }
-
-    override suspend fun getTodayLogs() = todayRangeMillis().let { (start, end) ->
-        chatDao.getTodayLogs(start, end)
-    }
-
     override suspend fun getChatLogs(): List<ChatLog> {
-        clearExpiredLogs()
         return chatDao.getLogs()
+    }
+
+    override suspend fun clearAll() {
+        chatDao.clearAll()
     }
 
     override suspend fun processUserMessage(message: String) {
@@ -66,7 +55,7 @@ Chỉ trả về JSON, không thêm giải thích.
         )
 
         // 2. Call LLM
-        val response = llmRouter.chat(true, buildPrompt(message))
+        val response = llmRouter.chat( false, buildPrompt())
         val intent = parseIntent(response)
 
         // 3. Handle intent + save assistant message
@@ -108,17 +97,24 @@ Chỉ trả về JSON, không thêm giải thích.
         }
     }
 
-    private fun buildPrompt(userInput: String): List<LLMMessage> {
-        return listOf(
-            LLMMessage(
-                role = "system",
-                content = SYSTEM_PROMPT
-            ),
-            LLMMessage(
-                role = "user",
-                content = userInput
-            )
-        )
+    // Build prompt with system prompt + all saved chat logs
+    private suspend fun buildPrompt(): List<LLMMessage> {
+        val messages = mutableListOf<LLMMessage>()
+
+        // System instruction first
+        messages += LLMMessage(role = "system", content = SYSTEM_PROMPT)
+
+        // Append full conversation history in order
+        val logs = chatDao.getLogs()
+        logs.forEach { log ->
+            val roleStr = when (log.role) {
+                Role.USER -> "user"
+                Role.ASSISTANT -> "assistant"
+            }
+            messages += LLMMessage(role = roleStr, content = log.message)
+        }
+
+        return messages
     }
 
     private fun parseIntent(response: String): AssistantIntent {
@@ -141,9 +137,9 @@ Chỉ trả về JSON, không thêm giải thích.
         }
     }
 
-    private suspend fun clearExpiredLogs() {
-        val expiredTime =
-            System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000
+    override suspend fun clearExpiredLogs() {
+        // remove logs older than 24h
+        val expiredTime = System.currentTimeMillis() - 24 * 60 * 60 * 1000
         chatDao.deleteOlderThan(expiredTime)
     }
 }

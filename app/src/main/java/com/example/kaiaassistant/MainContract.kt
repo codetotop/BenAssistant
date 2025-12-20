@@ -6,7 +6,7 @@ interface MainContract {
 
     interface View {
 
-        fun showMessages(messages: List<ChatLog>)
+        fun showMessages(messages: List<ChatLog>? = listOf())
         fun addMessage(message: ChatLog)
 
         fun showLoading()
@@ -22,7 +22,7 @@ interface MainContract {
         fun attach(view: View)
         fun detach()
         fun onUserSendMessage(text: String)
-        fun loadTodayMessages()
-        fun loadAllMessages()
+        fun loadMessages()
+        fun removeAll()
     }
 }

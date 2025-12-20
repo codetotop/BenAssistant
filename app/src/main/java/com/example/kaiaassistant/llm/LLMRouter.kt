@@ -13,11 +13,11 @@ class LlmRouter(
     private val connectivityManager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
-    suspend fun chat(forceOffline: Boolean, messages: List<LLMMessage>): String {
+    suspend fun chat(isForceOffline: Boolean, messages: List<LLMMessage>): String {
         return when {
-            forceOffline -> ollamaClient.chat(messages)
-            isOnline()   -> openAiClient.chat(messages)
-            else         -> ollamaClient.chat(messages)
+            isForceOffline -> ollamaClient.chat(messages)
+            isOnline() -> openAiClient.chat(messages)
+            else -> ollamaClient.chat(messages)
         }
     }
 

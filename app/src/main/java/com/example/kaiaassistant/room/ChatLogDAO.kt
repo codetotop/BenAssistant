@@ -16,6 +16,9 @@ interface ChatLogDao {
     @Insert
     suspend fun insert(log: ChatLog)
 
+    @Query("DELETE FROM chat_log")
+    suspend fun clearAll()
+
     @Query("DELETE FROM chat_log WHERE timestamp < :expiredTime")
     suspend fun deleteOlderThan(expiredTime: Long)
 }

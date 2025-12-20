@@ -6,7 +6,7 @@
     android:layout_height="match_parent">
 
     <TextView
-        android:id="@+id/btnRecent"
+        android:id="@+id/btnRemove"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
@@ -23,7 +23,7 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@color/normal_gray"
-        app:layout_constraintTop_toBottomOf="@+id/btnRecent"
+        app:layout_constraintTop_toBottomOf="@+id/btnRemove"
         android:layout_marginTop="10dp"/>
 
 
