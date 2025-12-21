@@ -104,8 +104,8 @@ Chỉ trả về JSON, không thêm giải thích.
         // System instruction first
         messages += LLMMessage(role = "system", content = SYSTEM_PROMPT)
 
-        // Append full conversation history in order
-        val logs = chatDao.getLogs()
+        // Then chat logs
+        val logs = chatDao.getLogs().takeLast(4)
         logs.forEach { log ->
             val roleStr = when (log.role) {
                 Role.USER -> "user"

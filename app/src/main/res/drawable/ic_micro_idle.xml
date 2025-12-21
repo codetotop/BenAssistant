@@ -6,12 +6,12 @@
 
     <!-- Black circular background -->
     <path
-        android:fillColor="#000000"
+        android:fillColor="#E0E0E0"
         android:pathData="M18,2A16,16 0 1,0 18,34A16,16 0 1,0 18,2Z" />
 
     <!-- Mic head (rounded rectangle) -->
     <path
-        android:fillColor="#FFFFFF"
+        android:fillColor="#B3B3B3"
         android:pathData="M14,10
                           a4,4 0 0,1 8,0
                           v8
@@ -20,21 +20,21 @@
 
     <!-- Mic body (vertical line) -->
     <path
-        android:strokeColor="#FFFFFF"
+        android:strokeColor="#B3B3B3"
         android:strokeWidth="2"
         android:strokeLineCap="round"
         android:pathData="M18,22 L18,26" />
 
     <!-- Mic base (horizontal line) -->
     <path
-        android:strokeColor="#FFFFFF"
+        android:strokeColor="#B3B3B3"
         android:strokeWidth="2"
         android:strokeLineCap="round"
         android:pathData="M15,28 L21,28" />
 
     <!-- Mic arms (left and right) -->
     <path
-        android:strokeColor="#FFFFFF"
+        android:strokeColor="#B3B3B3"
         android:strokeWidth="2"
         android:strokeLineCap="round"
         android:pathData="M12,18 Q12,24 18,24 Q24,24 24,18" />

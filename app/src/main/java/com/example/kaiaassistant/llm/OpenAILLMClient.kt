@@ -15,7 +15,7 @@ class OpenAILLMClient : LLMClient {
 
         val response = api.chatCompletions(
             OpenAIChatRequest(
-                model = "gpt-5.1",
+                model = "gpt-4.1",
                 messages = messages.map {
                     ChatMessage(it.role, it.content)
                 }

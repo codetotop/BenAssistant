@@ -52,7 +52,6 @@ class MainPresenter(
                 val logs = repository.getChatLogs()
                 view?.showMessages(logs)
                 view?.scrollToBottom()
-
             } catch (e: CancellationException) {
                 //cancel hợp lệ (user gửi msg mới / screen destroy)
                 return@launch

@@ -1,10 +1,13 @@
 package com.example.kaiaassistant
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
+import android.view.animation.AnimationUtils
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.FrameLayout
@@ -16,6 +19,8 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -39,18 +44,24 @@ class MainActivity : AppCompatActivity(), MainContract.View {
     private lateinit var btnSend: ImageButton
     private lateinit var recyclerView: RecyclerView
 
+    private lateinit var voiceInputManager: VoiceInputManager
+
     // Loading overlay
     private lateinit var loadingOverlay: FrameLayout
     private lateinit var progressBar: ProgressBar
 
     private lateinit var adapter: ChatAdapter
 
+    companion object {
+        private const val REQ_RECORD_AUDIO = 99
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-        val llmRouter = LlmRouterFactory.create(this)
 
+        val llmRouter = LlmRouterFactory.create(this)
         presenter = MainPresenter(
             repository = ChatRepositoryImpl(
                 llmRouter = llmRouter,
@@ -59,12 +70,24 @@ class MainActivity : AppCompatActivity(), MainContract.View {
                 mapAgent = MapAgentImpl(this)
             )
         )
-
         presenter.attach(this)
 
+        // Khởi tạo VoiceInputManager
+        voiceInputManager = VoiceInputManager(
+            context = this,
+            onResult = { text ->
+                setMicListening(false)
+                presenter.onUserSendMessage(text)
+            },
+            onError = { error ->
+                setMicListening(false)
+                Toast.makeText(this, error, Toast.LENGTH_SHORT).show()
+            }
+        )
+
         initView()
-        setupLoading()
         firstSetup()
+        setupLoading()
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -88,11 +111,11 @@ class MainActivity : AppCompatActivity(), MainContract.View {
 
             override fun afterTextChanged(s: android.text.Editable?) {
                 if (s?.trim().isNullOrEmpty()) {
-                    btnSend.visibility = android.view.View.GONE
-                    btnVoice.visibility = android.view.View.VISIBLE
+                    btnSend.visibility = View.GONE
+                    btnVoice.visibility = View.VISIBLE
                 } else {
-                    btnSend.visibility = android.view.View.VISIBLE
-                    btnVoice.visibility = android.view.View.GONE
+                    btnSend.visibility = View.VISIBLE
+                    btnVoice.visibility = View.GONE
                 }
             }
         })
@@ -106,10 +129,60 @@ class MainActivity : AppCompatActivity(), MainContract.View {
         }
 
         btnVoice.setOnClickListener {
-
+            if (hasAudioPermission()) {
+                setMicListening(true)
+                voiceInputManager.startListening()
+            } else {
+                requestAudioPermission()
+            }
         }
         btnSend.setOnClickListener {
             presenter.onUserSendMessage(etInput.text.toString())
+        }
+    }
+
+    fun setMicListening(isListening: Boolean) {
+        // Switch background via resource id
+        if (isListening) {
+            btnVoice.background = ContextCompat.getDrawable(this, R.drawable.ic_micro_listening)
+            btnVoice.startAnimation(
+                AnimationUtils.loadAnimation(this, R.anim.anim_micro_listening)
+            )
+        } else {
+            btnVoice.background = ContextCompat.getDrawable(this,R.drawable.ic_micro_idle)
+            btnVoice.clearAnimation()
+        }
+    }
+
+    private fun hasAudioPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestAudioPermission() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.RECORD_AUDIO),
+            REQ_RECORD_AUDIO
+        )
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQ_RECORD_AUDIO) {
+            val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+            if (granted) {
+                voiceInputManager.startListening()
+                setMicListening(true)
+            } else {
+                Toast.makeText(this, "Audio permission is required", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -199,6 +272,7 @@ class MainActivity : AppCompatActivity(), MainContract.View {
     }
 
     override fun hideLoading() {
+        scrollToBottom()
         loadingOverlay.visibility = View.GONE
     }
 
@@ -214,6 +288,7 @@ class MainActivity : AppCompatActivity(), MainContract.View {
 
     override fun showMessages(messages: List<ChatLog>?) {
         adapter.submitList(messages)
+        scrollToBottom()
     }
 
     private fun hideKeyboard() {
@@ -232,6 +307,7 @@ class MainActivity : AppCompatActivity(), MainContract.View {
 
     override fun onDestroy() {
         super.onDestroy()
+        voiceInputManager.release()
         presenter.detach()
     }
 }
