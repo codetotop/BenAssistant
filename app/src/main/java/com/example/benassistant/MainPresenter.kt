@@ -25,7 +25,6 @@ class MainPresenter(
             repository.clearExpiredLogs()
             val logs = repository.getChatLogs()
             view?.showMessages(logs)
-            view?.scrollToBottom()
         }
     }
 
@@ -33,7 +32,6 @@ class MainPresenter(
         coroutineScope.launch {
             repository.clearAll()
             view?.showMessages()
-            view?.scrollToBottom()
         }
     }
 
@@ -47,11 +45,8 @@ class MainPresenter(
 
         requestJob = coroutineScope.launch {
             try {
-                repository.processUserMessage(msg)
-
-                val logs = repository.getChatLogs()
-                view?.showMessages(logs)
-                view?.scrollToBottom()
+                val chatLog = repository.processUserMessage(msg)
+                view?.addMessage(chatLog)
             } catch (e: CancellationException) {
                 //cancel hợp lệ (user gửi msg mới / screen destroy)
                 return@launch

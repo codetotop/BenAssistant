@@ -273,8 +273,8 @@ class MainActivity : AppCompatActivity(), MainContract.View {
     }
 
     override fun hideLoading() {
-        scrollToBottom()
         loadingOverlay.visibility = View.GONE
+        scrollToBottom()
     }
 
     override fun addMessage(message: ChatLog) {
@@ -282,14 +282,11 @@ class MainActivity : AppCompatActivity(), MainContract.View {
     }
 
     override fun showError(message: String) {
-        //addMessage(ChatLog(role = Role.ASSISTANT, message = "Có lỗi xảy ra"))
-        scrollToBottom()
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     override fun showMessages(messages: List<ChatLog>?) {
-        adapter.submitList(messages)
-        scrollToBottom()
+        adapter.setMessages(messages)
     }
 
     private fun hideKeyboard() {

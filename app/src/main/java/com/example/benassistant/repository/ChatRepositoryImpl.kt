@@ -45,7 +45,7 @@ Chỉ trả về JSON, không thêm giải thích.
         chatDao.clearAll()
     }
 
-    override suspend fun processUserMessage(message: String) {
+    override suspend fun processUserMessage(message: String): ChatLog {
         // 1. Save user message
         chatDao.insert(
             ChatLog(
@@ -58,43 +58,41 @@ Chỉ trả về JSON, không thêm giải thích.
         val response = llmRouter.chat( false, buildPrompt())
         val intent = parseIntent(response)
 
+        val chatLog: ChatLog
         // 3. Handle intent + save assistant message
         when (intent) {
 
             is AssistantIntent.Chat -> {
-                chatDao.insert(
-                    ChatLog(
-                        role = Role.ASSISTANT,
-                        message = intent.message
-                    )
+                chatLog = ChatLog(
+                    role = Role.ASSISTANT,
+                    message = intent.message
                 )
             }
 
             is AssistantIntent.SetAlarm -> {
+                chatLog = ChatLog(
+                    role = Role.ASSISTANT,
+                    message = "Đã đặt báo thức lúc %02d:%02d"
+                        .format(intent.hour, intent.minute)
+                )
                 alarmAgent.setAlarm(
                     intent.hour,
                     intent.minute,
                     intent.label
                 )
-                chatDao.insert(
-                    ChatLog(
-                        role = Role.ASSISTANT,
-                        message = "Đã đặt báo thức lúc %02d:%02d"
-                            .format(intent.hour, intent.minute)
-                    )
-                )
             }
 
             is AssistantIntent.OpenMap -> {
-                mapAgent.openMap(intent.destination)
-                chatDao.insert(
-                    ChatLog(
-                        role = Role.ASSISTANT,
-                        message = "Đang mở bản đồ tới ${intent.destination}"
-                    )
+                chatLog = ChatLog(
+                    role = Role.ASSISTANT,
+                    message = "Đang mở bản đồ tới ${intent.destination}"
                 )
+                mapAgent.openMap(intent.destination)
             }
         }
+
+        chatDao.insert(chatLog)
+        return  chatLog
     }
 
     // Build prompt with system prompt + all saved chat logs

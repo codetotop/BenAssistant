@@ -4,28 +4,25 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.benassistant.room.ChatLog
 import com.example.benassistant.room.Role
 
-class ChatAdapter : ListAdapter<ChatLog, RecyclerView.ViewHolder>(Diff) {
+class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
         private const val USER = 0
         private const val ASSISTANT = 1
     }
 
+    private var messages = mutableListOf<ChatLog>()
+
     override fun getItemViewType(position: Int): Int {
-        return if (getItem(position).role == Role.USER) USER else ASSISTANT
+        return if (messages[position].role == Role.USER) USER else ASSISTANT
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int)
-            : RecyclerView.ViewHolder {
-
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
-
         return if (viewType == USER) {
             UserVH(inflater.inflate(R.layout.item_user_message, parent, false))
         } else {
@@ -34,22 +31,29 @@ class ChatAdapter : ListAdapter<ChatLog, RecyclerView.ViewHolder>(Diff) {
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        val log = getItem(position)
+        val log = messages[position]
         when (holder) {
             is UserVH -> holder.bind(log)
             is AssistantVH -> holder.bind(log)
         }
     }
 
+    override fun getItemCount(): Int = messages.size
+
     fun addMessage(message: ChatLog) {
-        val newList = currentList.toMutableList()
-        newList.add(message)
-        submitList(newList)
+        messages.add(message)
+        notifyItemInserted(messages.size - 1)
     }
 
-    object Diff : DiffUtil.ItemCallback<ChatLog>() {
-        override fun areItemsTheSame(old: ChatLog, new: ChatLog) = old.id == new.id
-        override fun areContentsTheSame(old: ChatLog, new: ChatLog) = old == new
+    fun setMessages(newMessages: List<ChatLog>?) {
+        messages.clear()
+        messages.addAll(newMessages?: emptyList())
+        notifyDataSetChanged()
+    }
+
+    fun clearMessages() {
+        messages.clear()
+        notifyDataSetChanged()
     }
 
     class UserVH(view: View) : RecyclerView.ViewHolder(view) {

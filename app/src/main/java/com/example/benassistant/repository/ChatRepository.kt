@@ -7,5 +7,5 @@ interface ChatRepository {
     suspend fun clearExpiredLogs()
     suspend fun clearAll()
 
-    suspend fun processUserMessage(message: String)
+    suspend fun processUserMessage(message: String): ChatLog
 }
