@@ -19,7 +19,7 @@ class ChatRepositoryImpl(
 
     companion object {
         private const val SYSTEM_PROMPT = """
-Bạn là Kaia, một AI Assistant chạy trên Android.
+Bạn là Benjamin , một AI Assistant chạy trên Android.
 
 Hãy phân tích yêu cầu và trả về JSON theo đúng 1 trong các format sau:
 

@@ -1,0 +1,13 @@
+<resources>
+    <!-- Android 12+ (API 31+) themed splash screen -->
+    <style name="Base.Theme.KaiaAssistant" parent="Theme.Material3.DayNight.NoActionBar" />
+
+    <style name="Theme.KaiaAssistant" parent="Base.Theme.KaiaAssistant">
+        <item name="android:textColor">@color/black</item>
+
+        <!-- Android 12+ splash screen -->
+        <item name="android:windowSplashScreenBackground">#FFFFFF</item>
+        <!-- Optional splash icon and background color -->
+        <item name="android:windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+    </style>
+</resources>
