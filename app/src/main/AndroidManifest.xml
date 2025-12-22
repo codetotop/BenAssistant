@@ -15,7 +15,7 @@
         android:label="@string/app_name"
         android:roundIcon="@drawable/ic_ben"
         android:supportsRtl="true"
-        android:theme="@style/Theme.KaiaAssistant">
+        android:theme="@style/Theme.BenAssistant">
         <activity
             android:name=".MainActivity"
             android:exported="true">

@@ -1,8 +1,8 @@
 <resources>
     <!-- Night mode (API 28–30) -->
-    <style name="Base.Theme.KaiaAssistant" parent="Theme.Material3.DayNight.NoActionBar" />
+    <style name="Base.Theme.BenAssistant" parent="Theme.Material3.DayNight.NoActionBar" />
 
-    <style name="Theme.KaiaAssistant" parent="Base.Theme.KaiaAssistant">
+    <style name="Theme.BenAssistant" parent="Base.Theme.BenAssistant">
         <item name="android:textColor">@color/black</item>
         <!-- Force white even in night mode to keep splash background white -->
         <item name="android:windowBackground">#FFFFFF</item>

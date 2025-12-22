@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Kaia Assistant"
+rootProject.name = "Ben Assistant"
 include(":app")

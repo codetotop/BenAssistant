@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.kaiaassistant"
+    namespace = "com.example.benassistant"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.kaiaassistant"
+        applicationId = "com.example.benassistant"
         minSdk = 28
         targetSdk = 36
         versionCode = 1
