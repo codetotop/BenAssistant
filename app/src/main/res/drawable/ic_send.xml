@@ -6,7 +6,7 @@
 
                 <!-- Black circular background -->
                 <path
-                    android:fillColor="#000000"
+                    android:fillColor="#3F51B5"
                     android:pathData="M18,2A16,16 0 1,0 18,34A16,16 0 1,0 18,2Z" />
 
                 <!-- Straight, rounded white arrow pointing up -->
