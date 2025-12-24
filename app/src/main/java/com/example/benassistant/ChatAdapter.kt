@@ -52,9 +52,14 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     }
 
     fun loadMessages(newMessages: List<ChatLog>?) {
+        val oldSize = messages.size
         messages.clear()
-        messages.addAll(newMessages?.onEach { it.isNew = false } ?: emptyList())
-        notifyDataSetChanged()
+        notifyItemRangeRemoved(0, oldSize)
+
+        newMessages?.let {
+            messages.addAll(it.onEach { log -> log.isNew = false })
+            notifyItemRangeInserted(0, it.size)
+        }
     }
 
     class UserVH(view: View) : RecyclerView.ViewHolder(view) {
