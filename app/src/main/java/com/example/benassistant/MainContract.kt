@@ -10,8 +10,8 @@ interface MainContract {
         fun addMessage(message: ChatLog)
         fun setMessage(message: ChatLog)
 
-        fun showLoading()
-        fun hideLoading()
+        fun beginTransactionUI()
+        fun closeTransactionUI()
 
         fun clearInput()
 
@@ -25,5 +25,6 @@ interface MainContract {
         fun onUserSendMessage(text: String)
         fun loadMessages()
         fun removeAll()
+        fun cancelRequest()
     }
 }

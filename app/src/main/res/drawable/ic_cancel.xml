@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="36dp"
+    android:height="36dp"
+    android:viewportWidth="36"
+    android:viewportHeight="36">
+
+    <!-- Light gray circular background -->
+    <path
+        android:fillColor="#3F51B5"
+        android:pathData="M18,2A16,16 0 1,0 18,34A16,16 0 1,0 18,2Z" />
+
+    <!-- White rounded square in the center -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M14,12 L22,12 Q24,12 24,14 L24,22 Q24,24 22,24 L14,24 Q12,24 12,22 L12,14 Q12,12 14,12 Z" />
+</vector>

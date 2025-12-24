@@ -39,7 +39,7 @@ class MainPresenter(
         view?.addMessage(ChatLog(role = Role.USER, message = msg))
         view?.addMessage(ChatLog(role = Role.ASSISTANT, message = null, isNew = true))
         view?.clearInput()
-        view?.showLoading()
+        view?.beginTransactionUI()
 
         // Cancel previous request
         requestJob?.cancel()
@@ -57,10 +57,23 @@ class MainPresenter(
             } finally {
                 // chỉ hide loading nếu job này vẫn là job hiện tại
                 if (requestJob == this@launch) {
-                    view?.hideLoading()
+                    view?.closeTransactionUI()
                 }
             }
         }
+    }
+
+    override fun cancelRequest() {
+        requestJob?.cancel()
+        view?.closeTransactionUI()
+
+        // Set cancel message directly to the last assistant message
+        val cancelMessage = ChatLog(
+            role = Role.ASSISTANT,
+            message = "✋ Đã hủy yêu cầu vừa rồi",
+            isNew = false
+        )
+        view?.setMessage(cancelMessage)
     }
 
     override fun detach() {

@@ -2,7 +2,6 @@ package com.example.benassistant
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.View
@@ -39,6 +38,7 @@ class MainActivity : AppCompatActivity(), MainContract.View {
     private lateinit var btnRemove: TextView
     private lateinit var btnVoice: ImageButton
     private lateinit var btnSend: ImageButton
+    private lateinit var btnCancel: ImageButton
     private lateinit var recyclerView: RecyclerView
 
     private lateinit var voiceInputManager: VoiceInputManager
@@ -91,6 +91,7 @@ class MainActivity : AppCompatActivity(), MainContract.View {
         btnRemove = findViewById(R.id.btnRemove)
         btnVoice = findViewById(R.id.btnVoice)
         btnSend = findViewById(R.id.btnSend)
+        btnCancel = findViewById(R.id.btnCancel)
 
         // Khởi tạo adapter
         adapter = ChatAdapter()
@@ -104,9 +105,11 @@ class MainActivity : AppCompatActivity(), MainContract.View {
             override fun afterTextChanged(s: android.text.Editable?) {
                 if (s?.trim().isNullOrEmpty()) {
                     btnSend.visibility = View.GONE
+                    btnCancel.visibility = View.GONE
                     btnVoice.visibility = View.VISIBLE
                 } else {
                     btnSend.visibility = View.VISIBLE
+                    btnCancel.visibility = View.GONE
                     btnVoice.visibility = View.GONE
                 }
             }
@@ -130,6 +133,10 @@ class MainActivity : AppCompatActivity(), MainContract.View {
         }
         btnSend.setOnClickListener {
             presenter.onUserSendMessage(etInput.text.toString())
+        }
+
+        btnCancel.setOnClickListener {
+            presenter.cancelRequest()
         }
     }
 
@@ -228,12 +235,18 @@ class MainActivity : AppCompatActivity(), MainContract.View {
         }
     }
 
-    override fun showLoading() {
+    override fun beginTransactionUI() {
         hideKeyboard()
+        btnSend.visibility = View.GONE
+        btnCancel.visibility = View.VISIBLE
+        btnVoice.visibility = View.GONE
     }
 
-    override fun hideLoading() {
+    override fun closeTransactionUI() {
         scrollToBottom()
+        btnSend.visibility = View.GONE
+        btnCancel.visibility = View.GONE
+        btnVoice.visibility = View.VISIBLE
     }
 
     override fun addMessage(message: ChatLog) {
