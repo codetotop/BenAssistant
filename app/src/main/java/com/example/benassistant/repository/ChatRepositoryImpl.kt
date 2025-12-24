@@ -9,6 +9,7 @@ import com.example.benassistant.room.ChatLog
 import com.example.benassistant.room.ChatLogDao
 import com.example.benassistant.room.Role
 import org.json.JSONObject
+import kotlin.collections.listOf
 
 class ChatRepositoryImpl(
     private val llmRouter: LlmRouter,
@@ -54,14 +55,10 @@ Chỉ trả về JSON, không thêm giải thích.
             )
         )
 
-        // 2. Call LLM
-        val response = llmRouter.chat( false, buildPrompt())
-        val intent = parseIntent(response)
-
+        // 2. Handle intent + save assistant message
+        val intent = getIntent(message)
         val chatLog: ChatLog
-        // 3. Handle intent + save assistant message
         when (intent) {
-
             is AssistantIntent.Chat -> {
                 chatLog = ChatLog(
                     role = Role.ASSISTANT,
@@ -92,7 +89,40 @@ Chỉ trả về JSON, không thêm giải thích.
         }
 
         chatDao.insert(chatLog)
-        return  chatLog
+        return chatLog
+    }
+
+    private suspend fun getIntent(message: String): AssistantIntent {
+        // 1. Check for keywords before calling LLM
+        val lowerMessage = message.lowercase()
+        val alarmKeywords =
+            listOf("báo thức", "đặt báo thức", "báo thức lúc", "hẹn giờ", "đặt giờ", "alarm")
+        val isAlarm = alarmKeywords.any { lowerMessage.contains(it) }
+
+        // 2. Check set alarm
+        val hourRegex = Regex("(\\d{1,2})[:h](\\d{1,2})?")
+        val match = hourRegex.find(lowerMessage)
+        val hour = match?.groups?.get(1)?.value?.toIntOrNull()
+        val minute = match?.groups?.get(2)?.value?.toIntOrNull() ?: 0
+
+        if (isAlarm && hour != null) {
+            return AssistantIntent.SetAlarm(hour = hour, minute = minute, label = "Báo thức")
+        }
+
+        // 3. Check open map
+        val mapKeywords = listOf("bản đồ", "đường đi", "chỉ đường", "đến đâu", "đi tới", "map", )
+        if(mapKeywords.any { lowerMessage.contains(it) }) {
+            val destinationRegex = Regex("(tới|đến|đi tới|đi đến) (.+)")
+            val match = destinationRegex.find(lowerMessage)
+            val destination = match?.groups?.get(2)?.value
+            if (destination != null) {
+                return AssistantIntent.OpenMap(destination = destination)
+            }
+        }
+
+        // 4. Call LLM if no specific intent is detected or parsing fails
+        val response = llmRouter.chat(false, buildPrompt())
+        return parseIntent(response)
     }
 
     // Build prompt with system prompt + all saved chat logs

@@ -27,7 +27,7 @@ class VoiceInputManager(
                 if (!texts.isNullOrEmpty()) {
                     onResult(texts[0])
                 } else {
-                    onError("Mình chưa nghe rõ, có thể nói lại không?")
+                    onError("Vui lòng nói rõ hơn một chút giúp tôi!")
                 }
             }
 
@@ -74,16 +74,16 @@ class VoiceInputManager(
 
     companion object {
         private fun errorMessage(code: Int): String = when (code) {
-            SpeechRecognizer.ERROR_AUDIO -> "Audio recording error"
-            SpeechRecognizer.ERROR_CLIENT -> "Client side error"
-            SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Insufficient permissions"
-            SpeechRecognizer.ERROR_NETWORK -> "Network error"
-            SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Network timeout"
-            SpeechRecognizer.ERROR_NO_MATCH -> "No match found"
-            SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "Recognizer busy"
-            SpeechRecognizer.ERROR_SERVER -> "Server error"
-            SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "No speech input"
-            else -> "Voice error: $code"
+            SpeechRecognizer.ERROR_AUDIO -> "Lỗi ghi âm"
+            SpeechRecognizer.ERROR_CLIENT -> "Lỗi phía ứng dụng"
+            SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Thiếu quyền truy cập"
+            SpeechRecognizer.ERROR_NETWORK -> "Lỗi mạng"
+            SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Hết thời gian mạng"
+            SpeechRecognizer.ERROR_NO_MATCH -> "Vui lòng nói rõ hơn một chút giúp tôi!"
+            SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "Hệ thống đang bận"
+            SpeechRecognizer.ERROR_SERVER -> "Lỗi máy chủ"
+            SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Không phát hiện thấy giọng nói"
+            else -> "Lỗi giọng nói: $code"
         }
     }
 }

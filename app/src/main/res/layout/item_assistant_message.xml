@@ -4,12 +4,12 @@
     android:layout_height="wrap_content"
     android:layout_gravity="start"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:paddingVertical="6dp">
 
     <ImageView
-        android:layout_width="18dp"
-        android:layout_height="18dp"
-        android:src="@drawable/ic_b" />
+        android:layout_width="32dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_ben" />
 
     <TextView
         android:id="@+id/tvMessage"
