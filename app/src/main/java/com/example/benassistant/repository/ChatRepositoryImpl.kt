@@ -71,7 +71,7 @@ Chỉ trả về JSON, không thêm giải thích.
             is AssistantIntent.SetAlarm -> {
                 chatLog = ChatLog(
                     role = Role.ASSISTANT,
-                    message = "Đã đặt báo thức lúc %02d:%02d"
+                    message = "Ben đã đặt báo thức lúc %02d:%02d"
                         .format(intent.hour, intent.minute),
                     isNew = true
                 )
@@ -85,7 +85,7 @@ Chỉ trả về JSON, không thêm giải thích.
             is AssistantIntent.OpenMap -> {
                 chatLog = ChatLog(
                     role = Role.ASSISTANT,
-                    message = "Đang mở bản đồ tới ${intent.destination}",
+                    message = "Ben đang mở bản đồ tới ${intent.destination}",
                     isNew = true
                 )
                 mapAgent.openMap(intent.destination)

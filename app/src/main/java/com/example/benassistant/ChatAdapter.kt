@@ -3,6 +3,8 @@ package com.example.benassistant
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.benassistant.room.ChatLog
@@ -71,14 +73,23 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     }
 
     class AssistantVH(view: View) : RecyclerView.ViewHolder(view) {
-        private val tvLoading: TextView = itemView.findViewById(R.id.tvLoading)
+        private val typingIndicator: LinearLayout = itemView.findViewById(R.id.typingIndicator)
+        private val dot1: TextView = itemView.findViewById(R.id.dot1)
+        private val dot2: TextView = itemView.findViewById(R.id.dot2)
+        private val dot3: TextView = itemView.findViewById(R.id.dot3)
         private val tvMessage: TextView = itemView.findViewById(R.id.tvMessage)
         private var currentRunnable: Runnable? = null
 
         fun bind(log: ChatLog) {
             tvMessage.text = "" // Clear previous text
 
-            tvLoading.visibility = if (log.message == null && log.isNew) View.VISIBLE else View.GONE
+            if (log.message == null && log.isNew) {
+                typingIndicator.visibility = View.VISIBLE
+                startTypingAnimation()
+            } else {
+                typingIndicator.visibility = View.GONE
+                stopTypingAnimation()
+            }
 
             log.message?.let { message ->
                 if (log.isNew) {
@@ -88,6 +99,21 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                     tvMessage.text = message
                 }
             }
+        }
+
+        private fun startTypingAnimation() {
+            val animation = AnimationUtils.loadAnimation(itemView.context, R.anim.typing_dot)
+
+            // Start animations with delays to create wave effect
+            dot1.startAnimation(animation)
+            dot2.postDelayed({ dot2.startAnimation(animation) }, 200)
+            dot3.postDelayed({ dot3.startAnimation(animation) }, 400)
+        }
+
+        private fun stopTypingAnimation() {
+            dot1.clearAnimation()
+            dot2.clearAnimation()
+            dot3.clearAnimation()
         }
 
         private fun displayTextGradually(message: String) {

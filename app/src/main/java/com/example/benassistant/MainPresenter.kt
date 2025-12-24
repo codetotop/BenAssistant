@@ -70,7 +70,7 @@ class MainPresenter(
         // Set cancel message directly to the last assistant message
         val cancelMessage = ChatLog(
             role = Role.ASSISTANT,
-            message = "✋ Đã hủy yêu cầu vừa rồi",
+            message = "✋ Ben đã hủy yêu cầu vừa rồi",
             isNew = false
         )
         view?.setMessage(cancelMessage)
