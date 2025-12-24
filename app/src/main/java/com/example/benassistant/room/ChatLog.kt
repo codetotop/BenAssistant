@@ -9,7 +9,7 @@ data class ChatLog(
     val id: Long = 0,
 
     val role: Role, // user | assistant
-    val message: String,
+    val message: String? = null,
     val timestamp: Long = System.currentTimeMillis(),
 
     var isNew: Boolean = false // Track if the message is new

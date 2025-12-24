@@ -41,12 +41,17 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     override fun getItemCount(): Int = messages.size
 
     fun addMessage(message: ChatLog) {
-        message.isNew = true
         messages.add(message)
         notifyItemInserted(messages.size - 1)
     }
 
-    fun setMessages(newMessages: List<ChatLog>?) {
+    fun setMessage(message: ChatLog) {
+        val indexLast = messages.size - 1
+        messages[indexLast] = message
+        notifyItemChanged(indexLast)
+    }
+
+    fun loadMessages(newMessages: List<ChatLog>?) {
         messages.clear()
         messages.addAll(newMessages?.onEach { it.isNew = false } ?: emptyList())
         notifyDataSetChanged()
@@ -54,22 +59,29 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     class UserVH(view: View) : RecyclerView.ViewHolder(view) {
         fun bind(log: ChatLog) {
-            itemView.findViewById<TextView>(R.id.tvMessage).text = log.message
+            log.message?.let { message ->
+                itemView.findViewById<TextView>(R.id.tvMessage).text = message
+            }
         }
     }
 
     class AssistantVH(view: View) : RecyclerView.ViewHolder(view) {
-        private val textView: TextView = itemView.findViewById(R.id.tvMessage)
+        private val tvLoading: TextView = itemView.findViewById(R.id.tvLoading)
+        private val tvMessage: TextView = itemView.findViewById(R.id.tvMessage)
         private var currentRunnable: Runnable? = null
 
         fun bind(log: ChatLog) {
-            textView.text = "" // Clear previous text
-            val message = log.message
-            if (log.isNew) {
-                displayTextGradually(message)
-                log.isNew = false
-            } else {
-                textView.text = message
+            tvMessage.text = "" // Clear previous text
+
+            tvLoading.visibility = if (log.message == null && log.isNew) View.VISIBLE else View.GONE
+
+            log.message?.let { message ->
+                if (log.isNew) {
+                    displayTextGradually(message)
+                    log.isNew = false
+                } else {
+                    tvMessage.text = message
+                }
             }
         }
 
@@ -84,7 +96,7 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
                 override fun run() {
                     if (currentIndex < message.length) {
-                        textView.append(message[currentIndex].toString())
+                        tvMessage.append(message[currentIndex].toString())
                         currentIndex++
                         itemView.postDelayed(this, delayMillis)
                     }

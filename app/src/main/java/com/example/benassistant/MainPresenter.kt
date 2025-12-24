@@ -24,19 +24,20 @@ class MainPresenter(
         coroutineScope.launch {
             repository.clearExpiredLogs()
             val logs = repository.getChatLogs()
-            view?.showMessages(logs)
+            view?.loadMessages(logs)
         }
     }
 
     override fun removeAll() {
         coroutineScope.launch {
             repository.clearAll()
-            view?.showMessages()
+            view?.loadMessages()
         }
     }
 
     override fun onUserSendMessage(msg: String) {
         view?.addMessage(ChatLog(role = Role.USER, message = msg))
+        view?.addMessage(ChatLog(role = Role.ASSISTANT, message = null, isNew = true))
         view?.clearInput()
         view?.showLoading()
 
@@ -46,7 +47,7 @@ class MainPresenter(
         requestJob = coroutineScope.launch {
             try {
                 val chatLog = repository.processUserMessage(msg)
-                view?.addMessage(chatLog)
+                view?.setMessage(chatLog)
             } catch (e: CancellationException) {
                 //cancel hợp lệ (user gửi msg mới / screen destroy)
                 return@launch

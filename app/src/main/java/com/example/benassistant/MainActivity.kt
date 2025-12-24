@@ -31,7 +31,6 @@ import com.example.benassistant.llm.LlmRouterFactory
 import com.example.benassistant.repository.ChatRepositoryImpl
 import com.example.benassistant.room.AppDatabase
 import com.example.benassistant.room.ChatLog
-import com.example.benassistant.R
 
 class MainActivity : AppCompatActivity(), MainContract.View {
 
@@ -46,10 +45,6 @@ class MainActivity : AppCompatActivity(), MainContract.View {
     private lateinit var recyclerView: RecyclerView
 
     private lateinit var voiceInputManager: VoiceInputManager
-
-    // Loading overlay
-    private lateinit var loadingOverlay: FrameLayout
-    private lateinit var progressBar: ProgressBar
 
     private lateinit var adapter: ChatAdapter
 
@@ -88,7 +83,6 @@ class MainActivity : AppCompatActivity(), MainContract.View {
 
         initView()
         firstSetup()
-        setupLoading()
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -237,43 +231,11 @@ class MainActivity : AppCompatActivity(), MainContract.View {
         }
     }
 
-    // Create a full-screen overlay with a centered ProgressBar
-    private fun setupLoading() {
-        loadingOverlay = FrameLayout(this).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-            setBackgroundColor(0x66000000) // semi-transparent black
-            visibility = View.GONE
-            isClickable = true
-            isFocusable = true
-        }
-
-        progressBar = ProgressBar(this).apply {
-            val size = (48 * resources.displayMetrics.density).toInt()
-            layoutParams = FrameLayout.LayoutParams(size, size, Gravity.CENTER)
-        }
-
-        loadingOverlay.addView(progressBar)
-
-        // Add overlay to root container
-        if (rootView.parent is FrameLayout) {
-            (rootView.parent as FrameLayout).addView(loadingOverlay)
-        } else {
-            // Wrap rootView inside a FrameLayout to host the overlay
-            val content = rootView.parent as FrameLayout
-            content.addView(loadingOverlay)
-        }
-    }
-
     override fun showLoading() {
         hideKeyboard()
-        loadingOverlay.visibility = View.VISIBLE
     }
 
     override fun hideLoading() {
-        loadingOverlay.visibility = View.GONE
         scrollToBottom()
     }
 
@@ -281,16 +243,20 @@ class MainActivity : AppCompatActivity(), MainContract.View {
         adapter.addMessage(message)
     }
 
+    override fun setMessage(message: ChatLog) {
+        adapter.setMessage(message)
+    }
+
     override fun showError(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
-    override fun showMessages(messages: List<ChatLog>?) {
-        adapter.setMessages(messages)
+    override fun loadMessages(messages: List<ChatLog>?) {
+        adapter.loadMessages(messages)
     }
 
     private fun hideKeyboard() {
-        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         val view = currentFocus ?: etInput
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }

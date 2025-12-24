@@ -6,8 +6,9 @@ interface MainContract {
 
     interface View {
 
-        fun showMessages(messages: List<ChatLog>? = listOf())
+        fun loadMessages(messages: List<ChatLog>? = listOf())
         fun addMessage(message: ChatLog)
+        fun setMessage(message: ChatLog)
 
         fun showLoading()
         fun hideLoading()

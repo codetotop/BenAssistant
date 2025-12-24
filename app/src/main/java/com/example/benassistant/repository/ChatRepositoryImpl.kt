@@ -63,7 +63,8 @@ Chỉ trả về JSON, không thêm giải thích.
             is AssistantIntent.Chat -> {
                 chatLog = ChatLog(
                     role = Role.ASSISTANT,
-                    message = intent.message
+                    message = intent.message,
+                    isNew = true
                 )
             }
 
@@ -71,7 +72,8 @@ Chỉ trả về JSON, không thêm giải thích.
                 chatLog = ChatLog(
                     role = Role.ASSISTANT,
                     message = "Đã đặt báo thức lúc %02d:%02d"
-                        .format(intent.hour, intent.minute)
+                        .format(intent.hour, intent.minute),
+                    isNew = true
                 )
                 alarmAgent.setAlarm(
                     intent.hour,
@@ -83,7 +85,8 @@ Chỉ trả về JSON, không thêm giải thích.
             is AssistantIntent.OpenMap -> {
                 chatLog = ChatLog(
                     role = Role.ASSISTANT,
-                    message = "Đang mở bản đồ tới ${intent.destination}"
+                    message = "Đang mở bản đồ tới ${intent.destination}",
+                    isNew = true
                 )
                 mapAgent.openMap(intent.destination)
             }
@@ -136,11 +139,13 @@ Chỉ trả về JSON, không thêm giải thích.
         // Then chat logs
         val logs = chatDao.getLogs().takeLast(4)
         logs.forEach { log ->
-            val roleStr = when (log.role) {
-                Role.USER -> "user"
-                Role.ASSISTANT -> "assistant"
+            log.message?.let { msg ->
+                val roleStr = when (log.role) {
+                    Role.USER -> "user"
+                    Role.ASSISTANT -> "assistant"
+                }
+                messages += LLMMessage(role = roleStr, content = msg)
             }
-            messages += LLMMessage(role = roleStr, content = log.message)
         }
 
         return messages
