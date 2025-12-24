@@ -21,6 +21,12 @@ android {
             "\"${project.properties["OPENAI_API_KEY"]}\""
         )
 
+        buildConfigField(
+            "String",
+            "DEEPSEEK_API_KEY",
+            "\"${project.properties["DEEPSEEK_API_KEY"]}\""
+        )
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

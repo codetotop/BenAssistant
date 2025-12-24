@@ -14,7 +14,6 @@ class OllamaLLMClient : LLMClient {
 
     override suspend fun chat(messages: List<LLMMessage>): String {
         val request = OllamaChatRequest(
-            model = "qwen2.5:3b",
             messages = messages.map { ChatMessage(it.role, it.content) },
             stream = true
         )

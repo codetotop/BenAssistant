@@ -5,6 +5,7 @@ import com.example.benassistant.agent.AlarmAgent
 import com.example.benassistant.agent.MapAgent
 import com.example.benassistant.llm.LLMMessage
 import com.example.benassistant.llm.LlmRouter
+import com.example.benassistant.llm.LlmRouter.ConnectionMode
 import com.example.benassistant.room.ChatLog
 import com.example.benassistant.room.ChatLogDao
 import com.example.benassistant.room.Role
@@ -121,7 +122,7 @@ Chỉ trả về JSON, không thêm giải thích.
         }*/
 
         // 4. Call LLM if no specific intent is detected or parsing fails
-        val response = llmRouter.chat(false, buildPrompt())
+        val response = llmRouter.chat(ConnectionMode.DEEPSEEK, buildPrompt())
         return parseIntent(response)
     }
 

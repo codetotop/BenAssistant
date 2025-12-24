@@ -1,20 +1,20 @@
 package com.example.benassistant.llm
 
 import com.example.benassistant.BuildConfig
-import com.example.benassistant.remote.model.OpenAIChatRequest
+import com.example.benassistant.remote.deepseek.DeepseekClient
 import com.example.benassistant.remote.model.ChatMessage
-import com.example.benassistant.remote.openai.OpenAIClient
+import com.example.benassistant.remote.model.DeepseekChatRequest
 
-class OpenAILLMClient : LLMClient {
+class DeepseekLLMClient : LLMClient {
 
-    private val api = OpenAIClient.create(BuildConfig.OPENAI_API_KEY)
+    private val api = DeepseekClient.create(BuildConfig.DEEPSEEK_API_KEY)
 
     override suspend fun chat(
         messages: List<LLMMessage>
     ): String {
 
         val response = api.chatCompletions(
-            OpenAIChatRequest(
+            DeepseekChatRequest(
                 messages = messages.map {
                     ChatMessage(it.role, it.content)
                 }
