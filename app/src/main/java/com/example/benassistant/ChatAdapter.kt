@@ -88,8 +88,6 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                         currentIndex++
                         itemView.postDelayed(this, delayMillis)
                     }
-
-
                 }
             }
             currentRunnable = runnable
