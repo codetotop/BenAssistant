@@ -110,7 +110,7 @@ Chỉ trả về JSON, không thêm giải thích.
         }
 
         // 3. Check open map
-        val mapKeywords = listOf("bản đồ", "đường đi", "chỉ đường", "đến đâu", "đi tới", "map", )
+        /*val mapKeywords = listOf("bản đồ", "đường đi", "chỉ đường", "đến đâu", "đi tới", "map", )
         if(mapKeywords.any { lowerMessage.contains(it) }) {
             val destinationRegex = Regex("(tới|đến|đi tới|đi đến) (.+)")
             val match = destinationRegex.find(lowerMessage)
@@ -118,7 +118,7 @@ Chỉ trả về JSON, không thêm giải thích.
             if (destination != null) {
                 return AssistantIntent.OpenMap(destination = destination)
             }
-        }
+        }*/
 
         // 4. Call LLM if no specific intent is detected or parsing fails
         val response = llmRouter.chat(false, buildPrompt())

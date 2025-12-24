@@ -10,7 +10,9 @@ data class ChatLog(
 
     val role: Role, // user | assistant
     val message: String,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+
+    var isNew: Boolean = false // Track if the message is new
 )
 
 enum class Role {
