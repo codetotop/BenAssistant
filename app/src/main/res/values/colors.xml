@@ -5,4 +5,5 @@
     <color name="dark_gray">#757575</color>
     <color name="normal_gray">#B6B6B6</color>
     <color name="light_gray">#EBEBEB</color>
+    <color name="bg_item_alarm">#E8E8F4</color>
 </resources>

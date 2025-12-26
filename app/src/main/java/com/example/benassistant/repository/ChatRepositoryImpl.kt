@@ -6,6 +6,7 @@ import com.example.benassistant.agent.MapAgent
 import com.example.benassistant.llm.LLMMessage
 import com.example.benassistant.llm.LlmRouter
 import com.example.benassistant.llm.LlmRouter.ConnectionMode
+import com.example.benassistant.room.Alarm
 import com.example.benassistant.room.ChatLog
 import com.example.benassistant.room.ChatLogDao
 import com.example.benassistant.room.Role
@@ -14,8 +15,6 @@ import kotlin.collections.listOf
 
 class ChatRepositoryImpl(
     private val llmRouter: LlmRouter,
-    private val alarmAgent: AlarmAgent,
-    private val mapAgent: MapAgent,
     private val chatDao: ChatLogDao
 ) : ChatRepository {
 
@@ -73,12 +72,8 @@ Chỉ trả về JSON, không thêm giải thích.
                     role = Role.ASSISTANT,
                     message = "Ben đã đặt báo thức lúc %02d:%02d"
                         .format(intent.hour, intent.minute),
+                    alarm = Alarm(label = intent.label ?: "", hour = intent.hour, intent.minute),
                     isNew = true
-                )
-                alarmAgent.setAlarm(
-                    intent.hour,
-                    intent.minute,
-                    intent.label
                 )
             }
 
@@ -86,9 +81,9 @@ Chỉ trả về JSON, không thêm giải thích.
                 chatLog = ChatLog(
                     role = Role.ASSISTANT,
                     message = "Ben đang mở bản đồ tới ${intent.destination}",
+                    destination = intent.destination,
                     isNew = true
                 )
-                mapAgent.openMap(intent.destination)
             }
         }
 

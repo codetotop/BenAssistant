@@ -58,9 +58,7 @@ class MainActivity : AppCompatActivity(), MainContract.View {
         presenter = MainPresenter(
             repository = ChatRepositoryImpl(
                 llmRouter = llmRouter,
-                chatDao = AppDatabase.getInstance(this).chatLogDao(),
-                alarmAgent = AlarmAgentImpl(this),
-                mapAgent = MapAgentImpl(this)
+                chatDao = AppDatabase.getInstance(this).chatLogDao()
             )
         )
         presenter.attach(this)
@@ -150,7 +148,7 @@ class MainActivity : AppCompatActivity(), MainContract.View {
                 AnimationUtils.loadAnimation(this, R.anim.anim_micro_listening)
             )
         } else {
-            btnVoice.background = ContextCompat.getDrawable(this,R.drawable.ic_micro_idle)
+            btnVoice.background = ContextCompat.getDrawable(this, R.drawable.ic_micro_idle)
             btnVoice.clearAnimation()
         }
     }
@@ -177,7 +175,8 @@ class MainActivity : AppCompatActivity(), MainContract.View {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQ_RECORD_AUDIO) {
-            val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+            val granted =
+                grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
             if (granted) {
                 voiceInputManager.startListening()
                 setMicListening(true)
@@ -257,6 +256,17 @@ class MainActivity : AppCompatActivity(), MainContract.View {
 
     override fun setMessage(message: ChatLog) {
         adapter.setMessage(message)
+        message.alarm?.let { alarm ->
+            AlarmAgentImpl(this).setAlarm(
+                alarm.hour,
+                alarm.minute,
+                alarm.label
+            )
+        }
+
+        message.destination?.let { destination ->
+            MapAgentImpl(this).openMap(destination)
+        }
     }
 
     override fun removeLastMessage() {

@@ -7,6 +7,7 @@ import android.view.animation.AnimationUtils
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.benassistant.agent.AlarmAgentImpl
 import com.example.benassistant.room.ChatLog
 import com.example.benassistant.room.Role
 
@@ -91,6 +92,9 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         private val dot2: TextView = itemView.findViewById(R.id.dot2)
         private val dot3: TextView = itemView.findViewById(R.id.dot3)
         private val tvMessage: TextView = itemView.findViewById(R.id.tvMessage)
+        private val llAlarm: LinearLayout = itemView.findViewById(R.id.llAlarm)
+        private val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
+        private val tvTime: TextView = itemView.findViewById(R.id.tvTime)
         private var currentRunnable: Runnable? = null
 
         fun bind(log: ChatLog) {
@@ -111,6 +115,17 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                 } else {
                     tvMessage.text = message
                 }
+            }
+
+            log.alarm?.let { alarm ->
+                llAlarm.visibility = View.VISIBLE
+                llAlarm.setOnClickListener {
+                    AlarmAgentImpl(itemView.context).openClockApp()
+                }
+                tvTitle.text = "Báo thức"
+                tvTime.text = "%02d:%02d".format(alarm.hour, alarm.minute)
+            } ?: run {
+                llAlarm.visibility = View.GONE
             }
         }
 
