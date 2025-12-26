@@ -51,8 +51,8 @@ class MainPresenter(
             } catch (e: CancellationException) {
                 //cancel hợp lệ (user gửi msg mới / screen destroy)
                 return@launch
-
             } catch (e: Exception) {
+                view?.removeLastMessage()
                 view?.showError("Có lỗi xảy ra")
             } finally {
                 // chỉ hide loading nếu job này vẫn là job hiện tại

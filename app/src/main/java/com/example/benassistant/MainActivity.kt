@@ -257,6 +257,10 @@ class MainActivity : AppCompatActivity(), MainContract.View {
         adapter.setMessage(message)
     }
 
+    override fun removeLastMessage() {
+        adapter.removeLastMessage()
+    }
+
     override fun showError(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }

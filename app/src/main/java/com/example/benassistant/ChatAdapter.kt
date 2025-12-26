@@ -53,6 +53,19 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         notifyItemChanged(indexLast)
     }
 
+    fun removeLastMessage() {
+        if (messages.isNotEmpty()) {
+            val lastIndex = messages.size - 1
+            if (messages[lastIndex].role
+                == Role.ASSISTANT && messages[lastIndex].isNew
+                && messages[lastIndex].message == null
+            ) {
+                messages.removeAt(lastIndex)
+                notifyItemRemoved(lastIndex)
+            }
+        }
+    }
+
     fun loadMessages(newMessages: List<ChatLog>?) {
         val oldSize = messages.size
         messages.clear()

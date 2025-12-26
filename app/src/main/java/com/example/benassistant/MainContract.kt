@@ -9,6 +9,7 @@ interface MainContract {
         fun loadMessages(messages: List<ChatLog>? = listOf())
         fun addMessage(message: ChatLog)
         fun setMessage(message: ChatLog)
+        fun removeLastMessage()
 
         fun beginTransactionUI()
         fun closeTransactionUI()

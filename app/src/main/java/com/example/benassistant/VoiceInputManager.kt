@@ -65,7 +65,7 @@ class VoiceInputManager(
 
         handler.postDelayed({
             speechRecognizer.stopListening()
-        }, 4000)
+        }, 3000)
     }
 
     fun release() {
