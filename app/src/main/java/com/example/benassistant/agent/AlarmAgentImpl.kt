@@ -13,6 +13,7 @@ class AlarmAgentImpl(
             putExtra(AlarmClock.EXTRA_HOUR, hour)
             putExtra(AlarmClock.EXTRA_MINUTES, minute)
             putExtra(AlarmClock.EXTRA_MESSAGE, label)
+            putExtra(AlarmClock.EXTRA_SKIP_UI, true) // Bỏ qua UI của ứng dụng đồng hồ
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context.startActivity(intent)
@@ -22,10 +23,6 @@ class AlarmAgentImpl(
         val intent = Intent(AlarmClock.ACTION_SHOW_ALARMS).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        if (intent.resolveActivity(context.packageManager) != null) {
-            context.startActivity(intent)
-        } else {
-            throw IllegalStateException("No clock app found on the device.")
-        }
+        context.startActivity(intent)
     }
 }

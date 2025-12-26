@@ -89,7 +89,8 @@
             android:layout_gravity="start"
             android:layout_marginTop="2dp"
             android:background="@drawable/bg_time_alarm"
-            android:padding="12dp"
+            android:paddingStart="12dp"
+            android:paddingVertical="14.5dp"
             android:textColor="@android:color/black"
             android:textSize="14sp"
             tools:text="17:00" />

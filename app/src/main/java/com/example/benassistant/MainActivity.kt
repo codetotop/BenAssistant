@@ -151,6 +151,8 @@ class MainActivity : AppCompatActivity(), MainContract.View {
             btnVoice.background = ContextCompat.getDrawable(this, R.drawable.ic_micro_idle)
             btnVoice.clearAnimation()
         }
+
+        btnVoice.isClickable = !isListening
     }
 
     private fun hasAudioPermission(): Boolean {

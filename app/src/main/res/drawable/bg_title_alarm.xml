@@ -5,6 +5,8 @@
     <solid android:color="@color/bg_item_alarm" />
 
     <corners
-        android:topLeftRadius="6dp"
-        android:topRightRadius="6dp" />
+        android:topLeftRadius="12dp"
+        android:topRightRadius="12dp"
+        android:bottomLeftRadius="6dp"
+        android:bottomRightRadius="6dp" />
 </shape>
