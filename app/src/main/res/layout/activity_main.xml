@@ -32,7 +32,8 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:paddingHorizontal="18dp"
-        app:layout_constraintBottom_toBottomOf="@+id/inputLayout"
+        android:clipToPadding="false"
+        app:layout_constraintBottom_toTopOf="@+id/inputLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/viewDivider" />

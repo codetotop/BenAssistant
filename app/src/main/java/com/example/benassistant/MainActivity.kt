@@ -71,6 +71,7 @@ class MainActivity : AppCompatActivity(), MainContract.View {
             onResult = { text ->
                 setMicListening(false)
                 presenter.onUserSendMessage(text)
+                scrollToUserMessage()
             },
             onError = { error ->
                 setMicListening(false)
@@ -133,6 +134,7 @@ class MainActivity : AppCompatActivity(), MainContract.View {
         }
         btnSend.setOnClickListener {
             presenter.onUserSendMessage(etInput.text.toString())
+            scrollToUserMessage()
         }
 
         btnCancel.setOnClickListener {
@@ -281,6 +283,16 @@ class MainActivity : AppCompatActivity(), MainContract.View {
 
     override fun scrollToBottom() {
         recyclerView.scrollToPosition(adapter.itemCount - 1)
+    }
+
+    private fun scrollToUserMessage() {
+        val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+        val userMessagePosition = adapter.itemCount - 1 // Last item is the user's message
+
+        recyclerView.post {
+            // Scroll to the user's message and ensure it is at the bottom of the screen
+            layoutManager.scrollToPositionWithOffset(userMessagePosition, 0)
+        }
     }
 
     override fun onDestroy() {
