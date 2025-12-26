@@ -1,6 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Ben</string>
-    <string name="str_recent">Xoá</string>
     <string name="ben">Ben</string>
     <string name="b_o_th_c">Báo thức</string>
 </resources>
