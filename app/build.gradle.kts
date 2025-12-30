@@ -1,7 +1,19 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("org.jetbrains.kotlin.kapt")
+}
+
+// Load local.properties into project properties
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    val localProperties = Properties()
+    localProperties.load(localPropertiesFile.inputStream())
+    for ((key, value) in localProperties) {
+        project.ext.set(key.toString(), value)
+    }
 }
 
 android {
