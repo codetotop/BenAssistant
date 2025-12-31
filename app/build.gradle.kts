@@ -48,9 +48,9 @@ android {
     signingConfigs {
         create("release") {
             storeFile = file("ben-release-key.jks")
-            storePassword = "11franco"
-            keyAlias = "ben_key_alias"
-            keyPassword = "11franco"
+            storePassword = project.properties["KEYSTORE_PASSWORD"] as String
+            keyAlias = project.properties["KEY_ALIAS"] as String
+            keyPassword = project.properties["KEY_PASSWORD"] as String
         }
     }
 
