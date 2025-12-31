@@ -1,1 +1,23 @@
-/build
+# Android build & cache
+/build/
+/release/
+/debug/
+.externalNativeBuild/
+.cxx/
+
+# Keystore/Key
+*.jks
+*.keystore
+*.pem
+*.p12
+*.key
+ben-release-key.jks
+
+# Google Services
+/google-services.json
+
+# Misc
+*.log
+*.tmp
+*.swp
+.DS_Store

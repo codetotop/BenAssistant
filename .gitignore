@@ -1,15 +1,46 @@
+# Android
 *.iml
-.gradle
+.gradle/
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+/.idea/
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
+/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+app/build/
+app/release/
+app/debug/
+
+# Ruby/Bundler
+/vendor/
+.bundle/
+Gemfile.lock
+
+# Fastlane
+fastlane/report.xml
+fastlane/preview.html
+fastlane/screenshots/
+fastlane/test_output/
+
+# Keystore/Key
+*.jks
+*.keystore
+*.pem
+*.p12
+*.key
+
+# Firebase/Google Services
+app/google-services.json
+fastlane/*.json
+
+# Misc
+*.log
+*.tmp
+*.swp
+
+# Node (nếu có)
+node_modules/
+
+# MacOS
+.DS_Store
