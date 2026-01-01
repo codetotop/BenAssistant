@@ -1,43 +1,63 @@
-# This file contains the fastlane.tools configuration
-# You can find the documentation at https://docs.fastlane.tools
-#
-# For a list of all available actions, check out
-#
-#     https://docs.fastlane.tools/actions
-#
-# For a list of all available plugins, check out
-#
-#     https://docs.fastlane.tools/plugins/available-plugins
-#
-
-# Uncomment the line if you want fastlane to automatically update itself
-# update_fastlane
-
 default_platform(:android)
 
 platform :android do
+  # Test lane
   desc "Runs all the tests"
   lane :test do
     gradle(task: "test")
   end
 
-  desc "Submit a new Beta Build"
-  lane :beta do
-    gradle(task: "clean assembleRelease")
+  # Build release APK
+  desc "Builds the release APK"
+  lane :build_release do
+    gradle(task: "assembleRelease")
+  end
+
+  lane :git_version_code do
+    sh("git rev-list --count HEAD").strip
+  end
+
+  lane :git_version_name do
+    tag = sh("git describe --tags --abbrev=0", log: false).strip rescue nil
+    tag || "0.1.0-dev"
+  end
+
+  lane :set_version do
+    vc = android_get_version_code(gradle_file: "app/build.gradle.kts") || git_version_code
+    vn = android_get_version_name(gradle_file: "app/build.gradle.kts") || git_version_name
+
+    UI.message("Version set: #{vn} (#{vc})")
+  end
+
+  lane :release_notes_from_git do
+    notes = sh("git log -1 --pretty=%B").strip
+    notes.empty? ? "No release notes provided." : notes
+  end
+
+  # Upload to Firebase App Distribution
+  desc "Upload the APK to Firebase App Distribution"
+  lane :upload_firebase do
+    notes = release_notes_from_git
+    version_code = android_get_version_code(gradle_file: "app/build.gradle.kts") || git_version_code
+    version_name = android_get_version_name(gradle_file: "app/build.gradle.kts") || git_version_name
     firebase_app_distribution(
-        app: "1:1074263516470:android:e416942e842cbf8fa43f97",
-        service_credentials_file: "/Users/dungnb/Documents/DungNB/NalProject/BenAssistant/fastlane/ben-ai-assistant-firebase-adminsdk-fbsvc-6bf38f72de.json",
-        testers: "dungnb@nal.vn,dungletk2109@gmail.com",
-        release_notes: "Beta build từ fastlane"
-      )
-  
-    # sh "your_script.sh"
-    # You can also use other beta testing services here
+      app: "1:1074263516470:android:e416942e842cbf8fa43f97",
+      service_credentials_file: "fastlane/ben-ai-assistant-firebase-adminsdk-fbsvc-6bf38f72de.json",
+      testers: "dungnb@nal.vn",
+      release_notes: "Version: #{version_name} (#{version_code})\n#{notes}"
+    )
+  end
+
+  desc "Build and upload a new beta version to Firebase App Distribution"
+  lane :beta do
+    set_version
+    build_release
+    upload_firebase
   end
 
   desc "Deploy a new version to the Google Play"
   lane :deploy do
-    gradle(task: "clean assembleRelease")
+    build_release
     upload_to_play_store
   end
 end

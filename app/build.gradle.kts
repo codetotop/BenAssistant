@@ -27,8 +27,8 @@ android {
         applicationId = "com.example.benassistant"
         minSdk = 28
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 29
+        versionName = "v1.0.0"
 
         buildConfigField(
             "String",
