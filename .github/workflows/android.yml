@@ -19,6 +19,13 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: gradle
-
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.2'
+    - name: Install Bundler
+      run: gem install bundler
+    - name: Install dependencies
+      run: bundle install
     - name: Build with Fastlane
       run: bundle exec fastlane android beta
