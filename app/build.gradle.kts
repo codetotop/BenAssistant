@@ -23,6 +23,11 @@ android {
     namespace = "com.example.benassistant"
     compileSdk = 36
 
+    fun getProperty(key: String, type: String = "property"): String =
+        System.getenv(key)
+            ?: project.findProperty(key) as? String
+            ?: throw GradleException("Missing $type: $key")
+
     defaultConfig {
         applicationId = "com.example.benassistant"
         minSdk = 28
@@ -33,13 +38,13 @@ android {
         buildConfigField(
             "String",
             "OPENAI_API_KEY",
-            "\"${project.properties["OPENAI_API_KEY"]}\""
+            '"' + getProperty("OPENAI_API_KEY", "config property") + '"'
         )
 
         buildConfigField(
             "String",
             "DEEPSEEK_API_KEY",
-            "\"${project.properties["DEEPSEEK_API_KEY"]}\""
+            '"' + getProperty("DEEPSEEK_API_KEY", "config property") + '"'
         )
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -48,9 +53,9 @@ android {
     signingConfigs {
         create("release") {
             storeFile = file("ben-release-key.jks")
-            storePassword = project.properties["KEYSTORE_PASSWORD"] as? String ?: throw GradleException("Missing signing property: KEYSTORE_PASSWORD")
-            keyAlias = project.properties["KEY_ALIAS"] as? String ?: throw GradleException("Missing signing property: KEY_ALIAS")
-            keyPassword = project.properties["KEY_PASSWORD"] as? String ?: throw GradleException("Missing signing property: KEY_PASSWORD")
+            storePassword = getProperty("KEYSTORE_PASSWORD", "signing property")
+            keyAlias = getProperty("KEY_ALIAS", "signing property")
+            keyPassword = getProperty("KEY_PASSWORD", "signing property")
         }
     }
 
