@@ -48,9 +48,9 @@ android {
     signingConfigs {
         create("release") {
             storeFile = file("ben-release-key.jks")
-            storePassword = project.properties["KEYSTORE_PASSWORD"] as String
-            keyAlias = project.properties["KEY_ALIAS"] as String
-            keyPassword = project.properties["KEY_PASSWORD"] as String
+            storePassword = project.properties["KEYSTORE_PASSWORD"] as? String ?: throw GradleException("Missing signing property: KEYSTORE_PASSWORD")
+            keyAlias = project.properties["KEY_ALIAS"] as? String ?: throw GradleException("Missing signing property: KEY_ALIAS")
+            keyPassword = project.properties["KEY_PASSWORD"] as? String ?: throw GradleException("Missing signing property: KEY_PASSWORD")
         }
     }
 
