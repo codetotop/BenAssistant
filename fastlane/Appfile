@@ -1,2 +1,2 @@
-json_key_file("/Users/dungnb/Documents/DungNB/NalProject/BenAssistant/fastlane/ben-ai-assistant-firebase-adminsdk-fbsvc-6bf38f72de.json") # Path to the json secret file - Follow https://docs.fastlane.tools/actions/supply/#setup to get one
+json_key_file("/Users/dungnb/Documents/DungNB/NalProject/BenAssistant/fastlane/service_account.json") # Path to the json secret file - Follow https://docs.fastlane.tools/actions/supply/#setup to get one
 package_name("com.example.benassistant")
