@@ -27,6 +27,14 @@ jobs:
         run: bundle _2.7.2_ install
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/ben-release-key.jks
+      - name: Build with Gradle (debug log)
+        run: ./gradlew assembleRelease --stacktrace --info --warning-mode all
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
       - name: Build with Fastlane
         run: bundle exec fastlane android beta
         env:
