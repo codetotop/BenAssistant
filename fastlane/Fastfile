@@ -43,7 +43,7 @@ platform :android do
     firebase_app_distribution(
       app: "1:1074263516470:android:e416942e842cbf8fa43f97",
       service_credentials_file: "fastlane/service_account.json",
-      testers: "dungnb@nal.vn",
+      testers: "dungnb@nal.vn, dungletk2109@gmail.com",
       release_notes: "Version: #{version_name} (#{version_code})\n#{notes}"
     )
   end
