@@ -27,5 +27,7 @@ jobs:
       run: gem install bundler:2.7.2
     - name: Install dependencies
       run: bundle _2.7.2_ install
+    - name: Build with Gradle (debug log)
+      run: ./gradlew assembleRelease --stacktrace --info --warning-mode all
     - name: Build with Fastlane
       run: bundle exec fastlane android beta
