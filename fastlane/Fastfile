@@ -7,6 +7,12 @@ platform :android do
     gradle(task: "test")
   end
 
+  # Build debug APK
+  desc "Builds the debug APK"
+  lane :build_debug do
+    gradle(task: "assembleDebug")
+  end
+
   # Build release APK
   desc "Builds the release APK"
   lane :build_release do
@@ -34,25 +40,46 @@ platform :android do
     notes.empty? ? "No release notes provided." : notes
   end
 
-  # Upload to Firebase App Distribution
-  desc "Upload the APK to Firebase App Distribution"
-  lane :upload_firebase do
+  # Upload Debug APK to Firebase App Distribution
+  desc "Upload Debug APK to Firebase App Distribution"
+  lane :upload_debug_firebase do
     notes = release_notes_from_git
     version_code = android_get_version_code(gradle_file: "app/build.gradle.kts") || git_version_code
     version_name = android_get_version_name(gradle_file: "app/build.gradle.kts") || git_version_name
     firebase_app_distribution(
       app: "1:1074263516470:android:e416942e842cbf8fa43f97",
-      service_credentials_file: "fastlane/service_account.json",
+      service_credentials_file: File.expand_path("service_account.json", __dir__),
       testers: "dungnb@nal.vn, dungletk2109@gmail.com",
-      release_notes: "Version: #{version_name} (#{version_code})\n#{notes}"
+      release_notes: "[DEBUG BUILD] Version: #{version_name} (#{version_code})\n#{notes}"
     )
   end
 
-  desc "Build and upload a new beta version to Firebase App Distribution"
-  lane :beta do
+  # Upload Release APK to Firebase App Distribution
+  desc "Upload Release APK to Firebase App Distribution"
+  lane :upload_release_firebase do
+    notes = release_notes_from_git
+    version_code = android_get_version_code(gradle_file: "app/build.gradle.kts") || git_version_code
+    version_name = android_get_version_name(gradle_file: "app/build.gradle.kts") || git_version_name
+    firebase_app_distribution(
+      app: "1:1074263516470:android:e416942e842cbf8fa43f97",
+      service_credentials_file: File.expand_path("service_account.json", __dir__),
+      testers: "dungnb@nal.vn, dungletk2109@gmail.com",
+      release_notes: "[RELEASE BUILD] Version: #{version_name} (#{version_code})\n#{notes}"
+    )
+  end
+
+  desc "Build debug APK and upload to Firebase App Distribution"
+  lane :debug do
+    set_version
+    build_debug
+    upload_debug_firebase
+  end
+
+  desc "Build release APK and upload to Firebase App Distribution"
+  lane :release do
     set_version
     build_release
-    upload_firebase
+    upload_release_firebase
   end
 
   desc "Deploy a new version to the Google Play"

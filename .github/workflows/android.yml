@@ -1,13 +1,41 @@
 name: Android CI
 
 on:
-  push:
-    branches: ["devDung"]
   pull_request:
-    branches: ["devDung"]
+    branches: ["main"]
+  merge_group:
+    branches: ["main"]
 
 jobs:
-  build:
+  build_debug:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+      - name: Install Bundler 2.7.2
+        run: gem install bundler:2.7.2
+      - name: Install dependencies
+        run: bundle _2.7.2_ install
+      - name: Decode service account
+        run: echo "${{ secrets.SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > fastlane/service_account.json
+      - name: Build Debug with Fastlane
+        run: bundle exec fastlane android debug
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+
+  build_release:
+    if: github.event_name == 'merge_group'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,8 +57,8 @@ jobs:
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/ben-release-key.jks
       - name: Decode service account
         run: echo "${{ secrets.SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > fastlane/service_account.json
-      - name: Build with Fastlane
-        run: bundle exec fastlane android beta
+      - name: Build release with Fastlane
+        run: bundle exec fastlane android release
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
