@@ -3,7 +3,7 @@ default_platform(:android)
 platform :android do
   # Test lane
   desc "Runs all the tests"
-  lane :test do
+  lane :build_test do
     gradle(task: "test")
   end
 
@@ -71,6 +71,7 @@ platform :android do
   desc "Build debug APK and upload to Firebase App Distribution"
   lane :debug do
     set_version
+    build_test
     build_debug
     upload_debug_firebase
   end
