@@ -8,7 +8,7 @@ on:
 
 jobs:
   build_debug:
-    name: Build Debug
+    name: build_debug
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
@@ -38,7 +38,7 @@ jobs:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
   build_release:
-    name: Build Release
+    name: build_release
     if: github.event_name == 'merge_group'
     runs-on: ubuntu-latest
     steps:
