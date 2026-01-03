@@ -8,6 +8,7 @@ on:
 
 jobs:
   build_debug:
+    name: Android CI - Build Debug
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
@@ -37,6 +38,7 @@ jobs:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
   build_release:
+    name: Android CI - Build Release
     if: github.event_name == 'merge_group'
     runs-on: ubuntu-latest
     steps:
