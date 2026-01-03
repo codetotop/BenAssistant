@@ -28,6 +28,8 @@ jobs:
         run: bundle _2.7.2_ install
       - name: Decode service account
         run: echo "${{ secrets.SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > fastlane/service_account.json
+      - name: Make gradlew executable
+        run: chmod +x gradlew
       - name: Build Debug with Fastlane
         run: bundle exec fastlane android debug
         env:
@@ -57,6 +59,8 @@ jobs:
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/ben-release-key.jks
       - name: Decode service account
         run: echo "${{ secrets.SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > fastlane/service_account.json
+      - name: Make gradlew executable
+        run: chmod +x gradlew
       - name: Build release with Fastlane
         run: bundle exec fastlane android release
         env:

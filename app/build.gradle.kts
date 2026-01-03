@@ -51,22 +51,32 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            storeFile = file("ben-release-key.jks")
-            storePassword = getProperty("KEYSTORE_PASSWORD", "signing property")
-            keyAlias = getProperty("KEY_ALIAS", "signing property")
-            keyPassword = getProperty("KEY_PASSWORD", "signing property")
+        if (project.hasProperty("KEYSTORE_PASSWORD") || System.getenv("KEYSTORE_PASSWORD") != null) {
+            create("release") {
+                storeFile = file("ben-release-key.jks")
+                storePassword = getProperty("KEYSTORE_PASSWORD", "signing property")
+                keyAlias = getProperty("KEY_ALIAS", "signing property")
+                keyPassword = getProperty("KEY_PASSWORD", "signing property")
+            }
         }
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+            isDebuggable = true
+        }
+
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+            if (signingConfigs.findByName("release") != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 
