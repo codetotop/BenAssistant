@@ -19,6 +19,7 @@ platform :android do
     gradle(task: "assembleRelease")
   end
 
+  # set_version
   lane :git_version_code do
     sh("git rev-list --count HEAD").strip
   end
