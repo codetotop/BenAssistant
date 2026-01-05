@@ -28,6 +28,8 @@ jobs:
         run: gem install bundler:2.7.2
       - name: Install dependencies
         run: bundle _2.7.2_ install
+      - name: Make gradlew executable
+        run: chmod +x gradlew
 
   build_debug:
     name: build_debug
@@ -70,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
 
     environment:
-      name: production   # giống với environment đã setup ở github
+      name: production   # Manual: Pause deploy, waiting PM, Leader review...
 
     steps:
       - name: Fake production deploy
