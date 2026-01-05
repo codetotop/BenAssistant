@@ -77,7 +77,7 @@ jobs:
    # Fake CD Deploy Production
   deploy-production:
     name: CD - Production (Manual Approval)
-    if: github.event_name == 'merge_group'
+    if: github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
 
