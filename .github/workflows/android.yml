@@ -28,8 +28,6 @@ jobs:
         run: gem install bundler:2.7.2
       - name: Install dependencies
         run: bundle _2.7.2_ install
-      - name: Make gradlew executable
-        run: chmod +x gradlew
 
   build_debug:
     name: build_debug
@@ -75,8 +73,10 @@ jobs:
       name: production   # giống với environment đã setup ở github
 
     steps:
+      - name: Make gradlew executable
+        run: chmod +x gradlew
       - name: Build Debug APK
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleRelease
       - name: Fake production deploy
         run: |
           echo "🚀 Deploying to production..."
