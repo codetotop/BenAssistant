@@ -28,8 +28,6 @@ jobs:
         run: gem install bundler:2.7.2
       - name: Install dependencies
         run: bundle _2.7.2_ install
-      - name: Make gradlew executable
-        run: chmod +x gradlew
 
   build_debug:
     name: build_debug
@@ -37,6 +35,8 @@ jobs:
     needs: setup
     runs-on: ubuntu-latest
     steps:
+      - name: Ensure fastlane directory exists
+        run: mkdir -p fastlane
       - name: Decode service account
         run: echo "${{ secrets.SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > fastlane/service_account.json
       - name: Build Debug with Fastlane
