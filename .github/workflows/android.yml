@@ -73,10 +73,6 @@ jobs:
       name: production   # giống với environment đã setup ở github
 
     steps:
-      - name: Make gradlew executable
-        run: chmod +x gradlew
-      - name: Build Debug APK
-        run: ./gradlew assembleRelease
       - name: Fake production deploy
         run: |
           echo "🚀 Deploying to production..."
