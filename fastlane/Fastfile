@@ -19,8 +19,15 @@ platform :android do
 
   desc "Get Firebase App Distribution link and version info"
   private_lane :get_app_info do
-    # Use the actual download URL from Firebase, fallback to general app link
-    firebase_link = ENV['FIREBASE_DOWNLOAD_URL'] || "https://appdistribution.firebase.dev/i/#{ENV['FIREBASE_APP_ID']}"
+    # Use the actual download URL from Firebase, with better fallback
+    firebase_link = ENV['FIREBASE_DOWNLOAD_URL']
+
+    # If no direct download URL, try to construct a better link
+    if firebase_link.nil? || firebase_link.include?('appdistribution.firebase.dev')
+      # Try the public distribution link format
+      firebase_link = "https://appdistribution.firebase.google.com/pub/i/#{ENV['FIREBASE_APP_ID']}"
+      UI.message("Using constructed public link: #{firebase_link}")
+    end
 
     # Get version from gradle file
     version_name = android_get_version_name(gradle_file: "app/build.gradle.kts") || git_version_name
@@ -32,12 +39,19 @@ platform :android do
     }
   end
 
+  desc "Alternative method to get direct download URL using Firebase API"
+  private_lane :get_firebase_download_url do
+    # This would require Firebase API calls to get the actual download URL
+    # For now, we'll use the public distribution page which works for testers
+    "https://appdistribution.firebase.google.com/pub/i/#{ENV['FIREBASE_APP_ID']}"
+  end
+
   desc "Notify success for debug build"
   lane :notify_debug_success do
     app_info = get_app_info
 
     # Notify developers
-    dev_message = "✅ *Build Debug Success!*\\n\\n📱 *Version:* #{app_info[:version_info]}\\n🌿 *Branch:* #{ENV['GITHUB_REF_NAME']}\\n👨‍💻 *Author:* #{ENV['GITHUB_ACTOR']}\\n\\n🔗 [Download APK](#{app_info[:download_url]})"
+    dev_message = "✅ *Build Debug Success!*\\n\\n📱 *Version:* #{app_info[:version_info]}\\n🌿 *Branch:* #{ENV['GITHUB_REF_NAME']}\\n👨‍💻 *Author:* #{ENV['GITHUB_ACTOR']}\\n\\n🔗 [View & Download APK](#{app_info[:download_url]})\\n\\n_Click link above to access Firebase App Distribution page_"
 
     send_telegram_notification(
       chat_id: ENV['TELEGRAM_DEV_CHAT_ID'],
@@ -45,7 +59,7 @@ platform :android do
     )
 
     # Notify testers
-    tester_message = "✅ *Debug Build Ready for Testing!*\\n\\n📱 *Version:* #{app_info[:version_info]}\\n🌿 *Branch:* #{ENV['GITHUB_REF_NAME']}\\n\\n🚀 *Ready to test!*\\n🔗 [Download APK](#{app_info[:download_url]})\\n\\n_Please test all features and report any issues._"
+    tester_message = "✅ *Debug Build Ready for Testing!*\\n\\n📱 *Version:* #{app_info[:version_info]}\\n🌿 *Branch:* #{ENV['GITHUB_REF_NAME']}\\n\\n🚀 *Ready to test!*\\n🔗 [Download APK Here](#{app_info[:download_url]})\\n\\n📋 *Instructions:*\\n1. Click link above\\n2. Download APK from Firebase\\n3. Install and test all features\\n4. Report any issues in dev chat"
 
     send_telegram_notification(
       chat_id: ENV['TELEGRAM_TESTER_CHAT_ID'],
@@ -58,7 +72,7 @@ platform :android do
     app_info = get_app_info
 
     # Notify developers
-    dev_message = "🎉 *Release Build Success!*\\n\\n📱 *Version:* #{app_info[:version_info]}\\n🌿 *Branch:* #{ENV['GITHUB_REF_NAME']}\\n📝 *Commit:* #{ENV['GITHUB_SHA']}\\n\\n🔗 [Download APK](#{app_info[:download_url]})"
+    dev_message = "🎉 *Release Build Success!*\\n\\n📱 *Version:* #{app_info[:version_info]}\\n🌿 *Branch:* #{ENV['GITHUB_REF_NAME']}\\n📝 *Commit:* #{ENV['GITHUB_SHA']}\\n\\n🔗 [View & Download APK](#{app_info[:download_url]})\\n\\n_Production-ready build available on Firebase_"
 
     send_telegram_notification(
       chat_id: ENV['TELEGRAM_DEV_CHAT_ID'],
@@ -66,7 +80,7 @@ platform :android do
     )
 
     # Notify testers
-    tester_message = "🎉 *Release Build Ready for Production!*\\n\\n📱 *Version:* #{app_info[:version_info]}\\n🌿 *Branch:* #{ENV['GITHUB_REF_NAME']}\\n\\n✅ *Ready for final testing before production!*\\n🔗 [Download APK](#{app_info[:download_url]})\\n\\n_Please perform final QA testing._"
+    tester_message = "🎉 *Release Build Ready for Production!*\\n\\n📱 *Version:* #{app_info[:version_info]}\\n🌿 *Branch:* #{ENV['GITHUB_REF_NAME']}\\n\\n✅ *Ready for final testing before production!*\\n🔗 [Download APK Here](#{app_info[:download_url]})\\n\\n📋 *Final QA Instructions:*\\n1. Click link above\\n2. Download production APK\\n3. Perform complete regression testing\\n4. Approve for production release"
 
     send_telegram_notification(
       chat_id: ENV['TELEGRAM_TESTER_CHAT_ID'],
@@ -141,8 +155,26 @@ platform :android do
       release_notes: "[DEBUG BUILD] Version: #{version_name} (#{version_code})\n#{notes}"
     )
 
+    # Debug: Print result to see structure
+    UI.message("Firebase result: #{result.inspect}")
+
+    # Try different ways to get download URL
+    download_url = nil
+    if result.is_a?(Hash)
+      download_url = result[:downloadUrl] || result['downloadUrl'] ||
+                    result[:testing_uri] || result['testing_uri'] ||
+                    result[:binary_download_uri] || result['binary_download_uri']
+    end
+
     # Store the download URL for notifications
-    ENV['FIREBASE_DOWNLOAD_URL'] = result[:downloadUrl] || result['downloadUrl'] || "https://appdistribution.firebase.dev/i/#{ENV['FIREBASE_APP_ID']}"
+    if download_url && !download_url.empty?
+      ENV['FIREBASE_DOWNLOAD_URL'] = download_url
+      UI.message("Found download URL: #{download_url}")
+    else
+      # Fallback to constructing direct link
+      ENV['FIREBASE_DOWNLOAD_URL'] = "https://appdistribution.firebase.google.com/pub/i/#{ENV['FIREBASE_APP_ID']}"
+      UI.message("Using fallback URL: #{ENV['FIREBASE_DOWNLOAD_URL']}")
+    end
   end
 
   # Upload Release APK to Firebase App Distribution
@@ -159,8 +191,26 @@ platform :android do
       release_notes: "[RELEASE BUILD] Version: #{version_name} (#{version_code})\n#{notes}"
     )
 
+    # Debug: Print result to see structure
+    UI.message("Firebase result: #{result.inspect}")
+
+    # Try different ways to get download URL
+    download_url = nil
+    if result.is_a?(Hash)
+      download_url = result[:downloadUrl] || result['downloadUrl'] ||
+                    result[:testing_uri] || result['testing_uri'] ||
+                    result[:binary_download_uri] || result['binary_download_uri']
+    end
+
     # Store the download URL for notifications
-    ENV['FIREBASE_DOWNLOAD_URL'] = result[:downloadUrl] || result['downloadUrl'] || "https://appdistribution.firebase.dev/i/#{ENV['FIREBASE_APP_ID']}"
+    if download_url && !download_url.empty?
+      ENV['FIREBASE_DOWNLOAD_URL'] = download_url
+      UI.message("Found download URL: #{download_url}")
+    else
+      # Fallback to constructing direct link
+      ENV['FIREBASE_DOWNLOAD_URL'] = "https://appdistribution.firebase.google.com/pub/i/#{ENV['FIREBASE_APP_ID']}"
+      UI.message("Using fallback URL: #{ENV['FIREBASE_DOWNLOAD_URL']}")
+    end
   end
 
   desc "Build debug APK and upload to Firebase App Distribution"

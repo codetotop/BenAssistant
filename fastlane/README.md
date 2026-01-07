@@ -15,13 +15,45 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 ## Android
 
-### android test
+### android notify_debug_success
 
 ```sh
-[bundle exec] fastlane android test
+[bundle exec] fastlane android notify_debug_success
+```
+
+Notify success for debug build
+
+### android notify_release_success
+
+```sh
+[bundle exec] fastlane android notify_release_success
+```
+
+Notify success for release build
+
+### android notify_build_failure
+
+```sh
+[bundle exec] fastlane android notify_build_failure
+```
+
+Notify build failure
+
+### android build_test
+
+```sh
+[bundle exec] fastlane android build_test
 ```
 
 Runs all the tests
+
+### android build_debug
+
+```sh
+[bundle exec] fastlane android build_debug
+```
+
+Builds the debug APK
 
 ### android build_release
 
@@ -63,21 +95,37 @@ Builds the release APK
 
 
 
-### android upload_firebase
+### android upload_debug_firebase
 
 ```sh
-[bundle exec] fastlane android upload_firebase
+[bundle exec] fastlane android upload_debug_firebase
 ```
 
-Upload the APK to Firebase App Distribution
+Upload Debug APK to Firebase App Distribution
 
-### android beta
+### android upload_release_firebase
 
 ```sh
-[bundle exec] fastlane android beta
+[bundle exec] fastlane android upload_release_firebase
 ```
 
-Build and upload a new beta version to Firebase App Distribution
+Upload Release APK to Firebase App Distribution
+
+### android debug
+
+```sh
+[bundle exec] fastlane android debug
+```
+
+Build debug APK and upload to Firebase App Distribution
+
+### android release
+
+```sh
+[bundle exec] fastlane android release
+```
+
+Build release APK and upload to Firebase App Distribution
 
 ### android deploy
 
