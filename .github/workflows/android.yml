@@ -22,16 +22,42 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            .gradle/caches
+            .gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
+          bundler-cache: true  # Cache gems automatically
+
+      - name: Cache Ruby gems
+        uses: actions/cache@v4
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+
       - name: Install Bundler 2.7.2
         run: gem install bundler:2.7.2
+
       - name: Install dependencies
-        run: bundle _2.7.2_ install
+        run: bundle _2.7.2_ install --path vendor/bundle
+
       - name: Create fastlane directory
         run: mkdir -p fastlane
+
       - name: Decode service account
         run: echo "${{ secrets.SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > fastlane/service_account.json
       - name: Build Debug with Fastlane
@@ -72,26 +98,44 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
+          cache: gradle  # Built-in Gradle cache
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
+          bundler-cache: true  # Built-in Bundler cache
+
+      - name: Cache Gradle Wrapper and Build Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/caches/build-cache-*
+          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-wrapper-
+
       - name: Install Bundler 2.7.2
         run: gem install bundler:2.7.2
+
       - name: Install dependencies
-        run: bundle _2.7.2_ install
+        run: bundle _2.7.2_ install --path vendor/bundle
+
       - name: Create directories
         run: |
           mkdir -p app
           mkdir -p fastlane
+
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/ben-release-key.jks
+
       - name: Decode service account
         run: echo "${{ secrets.SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > fastlane/service_account.json
       - name: Build release with Fastlane
@@ -140,20 +184,26 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
+          cache: gradle  # Built-in Gradle cache
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
+          bundler-cache: true  # Built-in Bundler cache
+
       - name: Install Bundler 2.7.2
         run: gem install bundler:2.7.2
+
       - name: Install dependencies
-        run: bundle _2.7.2_ install
+        run: bundle _2.7.2_ install --path vendor/bundle
+
       - name: Fake production deploy
         run: |
           echo "🚀 Deploying to production..."
