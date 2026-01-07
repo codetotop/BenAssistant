@@ -30,13 +30,38 @@ jobs:
         run: gem install bundler:2.7.2
       - name: Install dependencies
         run: bundle _2.7.2_ install
+      - name: Create fastlane directory
+        run: mkdir -p fastlane
       - name: Decode service account
         run: echo "${{ secrets.SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > fastlane/service_account.json
       - name: Build Debug with Fastlane
         run: bundle exec fastlane android debug
         env:
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+
+      - name: Notify success
+        if: success()
+        run: bundle exec fastlane android notify_debug_success
+        env:
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_DEV_CHAT_ID: ${{ secrets.TELEGRAM_DEV_CHAT_ID }}
+          TELEGRAM_TESTER_CHAT_ID: ${{ secrets.TELEGRAM_TESTER_CHAT_ID }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_SHA: ${{ github.sha }}
+
+      - name: Notify failure
+        if: failure()
+        run: bundle exec fastlane android notify_build_failure build_type:"Debug Build"
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_DEV_CHAT_ID: ${{ secrets.TELEGRAM_DEV_CHAT_ID }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_ACTOR: ${{ github.actor }}
 
   build_release:
     name: build_release
@@ -58,6 +83,10 @@ jobs:
         run: gem install bundler:2.7.2
       - name: Install dependencies
         run: bundle _2.7.2_ install
+      - name: Create directories
+        run: |
+          mkdir -p app
+          mkdir -p fastlane
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/ben-release-key.jks
       - name: Decode service account
@@ -65,11 +94,34 @@ jobs:
       - name: Build release with Fastlane
         run: bundle exec fastlane android release
         env:
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+
+      - name: Notify success
+        if: success()
+        run: bundle exec fastlane android notify_release_success
+        env:
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_DEV_CHAT_ID: ${{ secrets.TELEGRAM_DEV_CHAT_ID }}
+          TELEGRAM_TESTER_CHAT_ID: ${{ secrets.TELEGRAM_TESTER_CHAT_ID }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_SHA: ${{ github.sha }}
+
+      - name: Notify failure
+        if: failure()
+        run: bundle exec fastlane android notify_build_failure build_type:"Release Build"
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_DEV_CHAT_ID: ${{ secrets.TELEGRAM_DEV_CHAT_ID }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_ACTOR: ${{ github.actor }}
 
    # Fake CD Deploy Production
   deploy-production:

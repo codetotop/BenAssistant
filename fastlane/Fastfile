@@ -1,6 +1,90 @@
 default_platform(:android)
 
 platform :android do
+  # Notification functions
+  desc "Send Telegram notification"
+  private_lane :send_telegram_notification do |options|
+    chat_id = options[:chat_id]
+    message = options[:message]
+
+    sh("curl -X POST 'https://api.telegram.org/bot#{ENV['TELEGRAM_BOT_TOKEN']}/sendMessage' \
+       -H 'Content-Type: application/json' \
+       -d '{
+         \"chat_id\": \"#{chat_id}\",
+         \"text\": \"#{message}\",
+         \"parse_mode\": \"Markdown\",
+         \"disable_web_page_preview\": false
+       }'")
+  end
+
+  desc "Get Firebase App Distribution link and version info"
+  private_lane :get_app_info do
+    firebase_link = "https://appdistribution.firebase.dev/i/#{ENV['FIREBASE_APP_ID']}"
+
+    # Get version from gradle file
+    version_name = android_get_version_name(gradle_file: "app/build.gradle.kts") || git_version_name
+    version_code = android_get_version_code(gradle_file: "app/build.gradle.kts") || git_version_code
+
+    {
+      download_url: firebase_link,
+      version_info: "#{version_name} (#{version_code})"
+    }
+  end
+
+  desc "Notify success for debug build"
+  lane :notify_debug_success do
+    app_info = get_app_info
+
+    # Notify developers
+    dev_message = "✅ *Build Debug Success!*\\n\\n📱 *Version:* #{app_info[:version_info]}\\n🌿 *Branch:* #{ENV['GITHUB_REF_NAME']}\\n👨‍💻 *Author:* #{ENV['GITHUB_ACTOR']}\\n\\n🔗 [Download APK](#{app_info[:download_url]})"
+
+    send_telegram_notification(
+      chat_id: ENV['TELEGRAM_DEV_CHAT_ID'],
+      message: dev_message
+    )
+
+    # Notify testers
+    tester_message = "✅ *Debug Build Ready for Testing!*\\n\\n📱 *Version:* #{app_info[:version_info]}\\n🌿 *Branch:* #{ENV['GITHUB_REF_NAME']}\\n\\n🚀 *Ready to test!*\\n🔗 [Download APK](#{app_info[:download_url]})\\n\\n_Please test all features and report any issues._"
+
+    send_telegram_notification(
+      chat_id: ENV['TELEGRAM_TESTER_CHAT_ID'],
+      message: tester_message
+    )
+  end
+
+  desc "Notify success for release build"
+  lane :notify_release_success do
+    app_info = get_app_info
+
+    # Notify developers
+    dev_message = "🎉 *Release Build Success!*\\n\\n📱 *Version:* #{app_info[:version_info]}\\n🌿 *Branch:* #{ENV['GITHUB_REF_NAME']}\\n📝 *Commit:* #{ENV['GITHUB_SHA']}\\n\\n🔗 [Download APK](#{app_info[:download_url]})"
+
+    send_telegram_notification(
+      chat_id: ENV['TELEGRAM_DEV_CHAT_ID'],
+      message: dev_message
+    )
+
+    # Notify testers
+    tester_message = "🎉 *Release Build Ready for Production!*\\n\\n📱 *Version:* #{app_info[:version_info]}\\n🌿 *Branch:* #{ENV['GITHUB_REF_NAME']}\\n\\n✅ *Ready for final testing before production!*\\n🔗 [Download APK](#{app_info[:download_url]})\\n\\n_Please perform final QA testing._"
+
+    send_telegram_notification(
+      chat_id: ENV['TELEGRAM_TESTER_CHAT_ID'],
+      message: tester_message
+    )
+  end
+
+  desc "Notify build failure"
+  lane :notify_build_failure do |options|
+    build_type = options[:build_type] || "Build"
+
+    failure_message = "🔴 *#{build_type} Failed!*\\n\\n🌿 *Branch:* #{ENV['GITHUB_REF']}\\n📝 *Commit:* #{ENV['GITHUB_SHA']}\\n👨‍💻 *Author:* #{ENV['GITHUB_ACTOR']}\\n\\n🔍 Check logs for details"
+
+    send_telegram_notification(
+      chat_id: ENV['TELEGRAM_DEV_CHAT_ID'],
+      message: failure_message
+    )
+  end
+
   # Test lane
   desc "Runs all the tests"
   lane :build_test do
@@ -48,7 +132,7 @@ platform :android do
     version_code = android_get_version_code(gradle_file: "app/build.gradle.kts") || git_version_code
     version_name = android_get_version_name(gradle_file: "app/build.gradle.kts") || git_version_name
     firebase_app_distribution(
-      app: "1:1074263516470:android:e416942e842cbf8fa43f97",
+      app: ENV['FIREBASE_APP_ID'],
       service_credentials_file: File.expand_path("service_account.json", __dir__),
       testers: "dungnb@nal.vn, dungletk2109@gmail.com",
       release_notes: "[DEBUG BUILD] Version: #{version_name} (#{version_code})\n#{notes}"
@@ -62,7 +146,7 @@ platform :android do
     version_code = android_get_version_code(gradle_file: "app/build.gradle.kts") || git_version_code
     version_name = android_get_version_name(gradle_file: "app/build.gradle.kts") || git_version_name
     firebase_app_distribution(
-      app: "1:1074263516470:android:e416942e842cbf8fa43f97",
+      app: ENV['FIREBASE_APP_ID'],
       service_credentials_file: File.expand_path("service_account.json", __dir__),
       testers: "dungnb@nal.vn, dungletk2109@gmail.com",
       release_notes: "[RELEASE BUILD] Version: #{version_name} (#{version_code})\n#{notes}"

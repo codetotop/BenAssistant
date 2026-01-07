@@ -47,6 +47,12 @@ android {
             '"' + getProperty("DEEPSEEK_API_KEY", "config property") + '"'
         )
 
+        buildConfigField(
+            "String",
+            "FIREBASE_APP_ID",
+            '"' + getProperty("FIREBASE_APP_ID", "config property") + '"'
+        )
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
