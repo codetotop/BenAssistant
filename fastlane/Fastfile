@@ -19,7 +19,8 @@ platform :android do
 
   desc "Get Firebase App Distribution link and version info"
   private_lane :get_app_info do
-    firebase_link = "https://appdistribution.firebase.dev/i/#{ENV['FIREBASE_APP_ID']}"
+    # Use the actual download URL from Firebase, fallback to general app link
+    firebase_link = ENV['FIREBASE_DOWNLOAD_URL'] || "https://appdistribution.firebase.dev/i/#{ENV['FIREBASE_APP_ID']}"
 
     # Get version from gradle file
     version_name = android_get_version_name(gradle_file: "app/build.gradle.kts") || git_version_name
@@ -76,8 +77,9 @@ platform :android do
   desc "Notify build failure"
   lane :notify_build_failure do |options|
     build_type = options[:build_type] || "Build"
+    error_msg = options[:error] || "Check logs for details"
 
-    failure_message = "🔴 *#{build_type} Failed!*\\n\\n🌿 *Branch:* #{ENV['GITHUB_REF']}\\n📝 *Commit:* #{ENV['GITHUB_SHA']}\\n👨‍💻 *Author:* #{ENV['GITHUB_ACTOR']}\\n\\n🔍 Check logs for details"
+    failure_message = "🔴 *#{build_type} Failed!*\\n\\n🌿 *Branch:* #{ENV['GITHUB_REF'] || 'local'}\\n📝 *Commit:* #{ENV['GITHUB_SHA'] || 'local'}\\n👨‍💻 *Author:* #{ENV['GITHUB_ACTOR'] || 'local'}\\n\\n❌ *Error:* #{error_msg}\\n\\n🔍 Check workflow logs for more details"
 
     send_telegram_notification(
       chat_id: ENV['TELEGRAM_DEV_CHAT_ID'],
@@ -131,12 +133,16 @@ platform :android do
     notes = release_notes_from_git
     version_code = android_get_version_code(gradle_file: "app/build.gradle.kts") || git_version_code
     version_name = android_get_version_name(gradle_file: "app/build.gradle.kts") || git_version_name
-    firebase_app_distribution(
+
+    result = firebase_app_distribution(
       app: ENV['FIREBASE_APP_ID'],
       service_credentials_file: File.expand_path("service_account.json", __dir__),
       testers: "dungnb@nal.vn, dungletk2109@gmail.com",
       release_notes: "[DEBUG BUILD] Version: #{version_name} (#{version_code})\n#{notes}"
     )
+
+    # Store the download URL for notifications
+    ENV['FIREBASE_DOWNLOAD_URL'] = result[:downloadUrl] || result['downloadUrl'] || "https://appdistribution.firebase.dev/i/#{ENV['FIREBASE_APP_ID']}"
   end
 
   # Upload Release APK to Firebase App Distribution
@@ -145,27 +151,43 @@ platform :android do
     notes = release_notes_from_git
     version_code = android_get_version_code(gradle_file: "app/build.gradle.kts") || git_version_code
     version_name = android_get_version_name(gradle_file: "app/build.gradle.kts") || git_version_name
-    firebase_app_distribution(
+
+    result = firebase_app_distribution(
       app: ENV['FIREBASE_APP_ID'],
       service_credentials_file: File.expand_path("service_account.json", __dir__),
       testers: "dungnb@nal.vn, dungletk2109@gmail.com",
       release_notes: "[RELEASE BUILD] Version: #{version_name} (#{version_code})\n#{notes}"
     )
+
+    # Store the download URL for notifications
+    ENV['FIREBASE_DOWNLOAD_URL'] = result[:downloadUrl] || result['downloadUrl'] || "https://appdistribution.firebase.dev/i/#{ENV['FIREBASE_APP_ID']}"
   end
 
   desc "Build debug APK and upload to Firebase App Distribution"
   lane :debug do
-    set_version
-    build_test
-    build_debug
-    upload_debug_firebase
+    begin
+      set_version
+      build_test
+      build_debug
+      upload_debug_firebase
+      notify_debug_success  # Call notification after upload to get download URL
+    rescue => exception
+      notify_build_failure(build_type: "Debug Build", error: exception.message)
+      raise exception
+    end
   end
 
   desc "Build release APK and upload to Firebase App Distribution"
   lane :release do
-    set_version
-    build_release
-    upload_release_firebase
+    begin
+      set_version
+      build_release
+      upload_release_firebase
+      notify_release_success  # Call notification after upload to get download URL
+    rescue => exception
+      notify_build_failure(build_type: "Release Build", error: exception.message)
+      raise exception
+    end
   end
 
   desc "Deploy a new version to the Google Play"
