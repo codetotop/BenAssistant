@@ -1,90 +1,142 @@
 default_platform(:android)
 
 platform :android do
-  # Test lane
-  desc "Runs all the tests"
+  # Notification functions
+  desc "Send Telegram notification"
+  private_lane :send_telegram_notification do |options|
+    sh("curl -X POST 'https://api.telegram.org/bot#{ENV['TELEGRAM_BOT_TOKEN']}/sendMessage' \
+       -H 'Content-Type: application/json' \
+       -d '{
+         \"chat_id\": \"#{options[:chat_id]}\",
+         \"text\": \"#{options[:message]}\",
+         \"parse_mode\": \"Markdown\",
+         \"disable_web_page_preview\": false
+       }'")
+  end
+
+  desc "Get Firebase download link with release ID"
+  private_lane :get_firebase_link do |firebase_result|
+    # Extract release ID from Firebase response
+    release_id = firebase_result.is_a?(Hash) ?
+      (firebase_result[:name]&.split('/')&.last ||
+       Actions.lane_context[SharedValues::FIREBASE_APP_DISTRO_RELEASE]) : nil
+
+    if release_id && !release_id.empty?
+      app_id = ENV['FIREBASE_APP_ID']
+      link = "https://appdistribution.firebase.google.com/testerapps/#{app_id}/releases/#{release_id}"
+      UI.message("✅ Direct testerapps link: #{link}")
+      link
+    else
+      link = "https://appdistribution.firebase.google.com/pub/i/#{ENV['FIREBASE_APP_ID']}"
+      UI.message("⚠️ Using fallback public link: #{link}")
+      link
+    end
+  end
+
+  desc "Upload to Firebase and get download link"
+  private_lane :upload_to_firebase do |options|
+    notes = sh("git log -1 --pretty=%B").strip
+    notes = "No release notes provided." if notes.empty?
+
+    version_code = android_get_version_code(gradle_file: "app/build.gradle.kts") ||
+                  sh("git rev-list --count HEAD").strip
+    version_name = android_get_version_name(gradle_file: "app/build.gradle.kts") ||
+                  (sh("git describe --tags --abbrev=0").strip rescue "0.1.0-dev")
+
+    result = firebase_app_distribution(
+      app: ENV['FIREBASE_APP_ID'],
+      service_credentials_file: File.expand_path("service_account.json", __dir__),
+      testers: "dungnb@nal.vn, dungletk2109@gmail.com",
+      release_notes: "[#{options[:build_type]} BUILD] Version: #{version_name} (#{version_code})\n#{notes}"
+    )
+
+    {
+      download_url: get_firebase_link(result),
+      version_info: "#{version_name} (#{version_code})"
+    }
+  end
+
+  desc "Send build notifications"
+  private_lane :notify_build_result do |options|
+    if options[:success]
+      build_type = options[:build_type]
+      info = options[:info]
+
+      # Dev message
+      dev_msg = "#{build_type == 'DEBUG' ? '✅' : '🎉'} *#{build_type} Build Success!*\\n\\n" \
+               "📱 *Version:* #{info[:version_info]}\\n🌿 *Branch:* #{ENV['GITHUB_REF_NAME']}\\n" \
+               "👨‍💻 *Author:* #{ENV['GITHUB_ACTOR']}\\n\\n🔗 [Download APK](#{info[:download_url]})"
+
+      # Tester message
+      tester_msg = "#{build_type == 'DEBUG' ? '✅ *Debug Build Ready!*' : '🎉 *Release Build Ready!*'}\\n\\n" \
+                  "📱 *Version:* #{info[:version_info]}\\n🌿 *Branch:* #{ENV['GITHUB_REF_NAME']}\\n\\n" \
+                  "🔗 [Download APK](#{info[:download_url]})\\n\\n" \
+                  "📋 #{build_type == 'DEBUG' ? 'Test all features and report issues' : 'Final QA before production'}"
+
+      send_telegram_notification(chat_id: ENV['TELEGRAM_DEV_CHAT_ID'], message: dev_msg)
+      send_telegram_notification(chat_id: ENV['TELEGRAM_TESTER_CHAT_ID'], message: tester_msg)
+    else
+      # Failure notification
+      error_msg = options[:error].to_s.gsub(/[_*\[\]()~`>#+=|{}.!-]/) { |match| "\\#{match}" }
+      error_msg = error_msg[0..300] + "..." if error_msg.length > 300
+
+      failure_msg = "🔴 *#{options[:build_type]} Build Failed!*\\n\\n" \
+                   "🌿 *Branch:* #{ENV['GITHUB_REF_NAME'] || 'local'}\\n" \
+                   "👨‍💻 *Author:* #{ENV['GITHUB_ACTOR'] || 'local'}\\n\\n" \
+                   "❌ *Error:* #{error_msg}\\n\\n🔍 Check logs for details"
+
+      send_telegram_notification(chat_id: ENV['TELEGRAM_DEV_CHAT_ID'], message: failure_msg)
+    end
+  end
+
+  # Main build lanes
+  desc "Build debug APK and upload to Firebase"
+  lane :debug do
+    begin
+      UI.message("🔧 Starting debug build...")
+      gradle(task: "test")
+      gradle(task: "assembleDebug")
+
+      info = upload_to_firebase(build_type: "DEBUG")
+      notify_build_result(success: true, build_type: "DEBUG", info: info)
+
+      UI.success("✅ Debug build completed!")
+    rescue => e
+      notify_build_result(success: false, build_type: "Debug", error: e)
+      raise e
+    end
+  end
+
+  desc "Build release APK and upload to Firebase"
+  lane :release do
+    begin
+      UI.message("🚀 Starting release build...")
+      gradle(task: "assembleRelease")
+
+      info = upload_to_firebase(build_type: "RELEASE")
+      notify_build_result(success: true, build_type: "RELEASE", info: info)
+
+      UI.success("✅ Release build completed!")
+    rescue => e
+      notify_build_result(success: false, build_type: "Release", error: e)
+      raise e
+    end
+  end
+
+  # Legacy lanes for compatibility
   lane :build_test do
     gradle(task: "test")
   end
 
-  # Build debug APK
-  desc "Builds the debug APK"
   lane :build_debug do
     gradle(task: "assembleDebug")
   end
 
-  # Build release APK
-  desc "Builds the release APK"
   lane :build_release do
     gradle(task: "assembleRelease")
   end
 
-  # set_version
-  lane :git_version_code do
-    sh("git rev-list --count HEAD").strip
-  end
-
-  lane :git_version_name do
-    tag = sh("git describe --tags --abbrev=0", log: false).strip rescue nil
-    tag || "0.1.0-dev"
-  end
-
-  lane :set_version do
-    vc = android_get_version_code(gradle_file: "app/build.gradle.kts") || git_version_code
-    vn = android_get_version_name(gradle_file: "app/build.gradle.kts") || git_version_name
-
-    UI.message("Version set: #{vn} (#{vc})")
-  end
-
-  lane :release_notes_from_git do
-    notes = sh("git log -1 --pretty=%B").strip
-    notes.empty? ? "No release notes provided." : notes
-  end
-
-  # Upload Debug APK to Firebase App Distribution
-  desc "Upload Debug APK to Firebase App Distribution"
-  lane :upload_debug_firebase do
-    notes = release_notes_from_git
-    version_code = android_get_version_code(gradle_file: "app/build.gradle.kts") || git_version_code
-    version_name = android_get_version_name(gradle_file: "app/build.gradle.kts") || git_version_name
-    firebase_app_distribution(
-      app: "1:1074263516470:android:e416942e842cbf8fa43f97",
-      service_credentials_file: File.expand_path("service_account.json", __dir__),
-      testers: "dungnb@nal.vn, dungletk2109@gmail.com",
-      release_notes: "[DEBUG BUILD] Version: #{version_name} (#{version_code})\n#{notes}"
-    )
-  end
-
-  # Upload Release APK to Firebase App Distribution
-  desc "Upload Release APK to Firebase App Distribution"
-  lane :upload_release_firebase do
-    notes = release_notes_from_git
-    version_code = android_get_version_code(gradle_file: "app/build.gradle.kts") || git_version_code
-    version_name = android_get_version_name(gradle_file: "app/build.gradle.kts") || git_version_name
-    firebase_app_distribution(
-      app: "1:1074263516470:android:e416942e842cbf8fa43f97",
-      service_credentials_file: File.expand_path("service_account.json", __dir__),
-      testers: "dungnb@nal.vn, dungletk2109@gmail.com",
-      release_notes: "[RELEASE BUILD] Version: #{version_name} (#{version_code})\n#{notes}"
-    )
-  end
-
-  desc "Build debug APK and upload to Firebase App Distribution"
-  lane :debug do
-    set_version
-    build_test
-    build_debug
-    upload_debug_firebase
-  end
-
-  desc "Build release APK and upload to Firebase App Distribution"
-  lane :release do
-    set_version
-    build_release
-    upload_release_firebase
-  end
-
-  desc "Deploy a new version to the Google Play"
+  desc "Deploy to Google Play"
   lane :deploy do
     build_release
     upload_to_play_store
