@@ -33,6 +33,9 @@ jobs:
         run: bundle _2.7.2_ install
       - name: Build test only
         run: ./gradlew assembleDebug testDebugUnitTest
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
   # CI + CD Debug - PR from feature branch to v1.0.0
   build_debug:
