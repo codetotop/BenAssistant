@@ -1,44 +1,60 @@
-name: Android CI
+name: Android CI/CD
 
 on:
-  push:
-    branches: ["main"]
   pull_request:
-    branches: ["main"]
-  merge_group:
-    branches: ["main"]
+    branches: ["v1.0.0"]
+  push:
+    branches: ["v1.0.0", "main"]
+    tags: ["v*-rc*"]
 
 jobs:
 
-  build_debug:
-    name: build_debug
-    if: github.event_name == 'pull_request'
+
+  # CI only - push to v1.0.0
+  ci_build:
+    name: CI Build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/v1.0.0'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle  # Built-in Gradle cache
-
+          cache: gradle
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
-          bundler-cache: true  # Built-in Bundler cache
-
       - name: Install Bundler 2.7.2
         run: gem install bundler:2.7.2
-
       - name: Install dependencies
-        run: bundle _2.7.2_ install --path vendor/bundle
+        run: bundle _2.7.2_ install
+      - name: Build test only
+        run: ./gradlew assembleDebug testDebugUnitTest
 
-      - name: Create fastlane directory
-        run: mkdir -p fastlane
-
+  # CI + CD Debug - PR from feature branch to v1.0.0
+  build_debug:
+    name: CI/CD Debug
+    if: github.event_name == 'pull_request' && github.base_ref == 'v1.0.0'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+      - name: Install Bundler 2.7.2
+        run: gem install bundler:2.7.2
+      - name: Install dependencies
+        run: bundle _2.7.2_ install
       - name: Decode service account
         run: echo "${{ secrets.SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > fastlane/service_account.json
       - name: Build Debug with Fastlane
@@ -50,69 +66,49 @@ jobs:
           TELEGRAM_TESTER_CHAT_ID: ${{ secrets.TELEGRAM_TESTER_CHAT_ID }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-          GITHUB_REF_NAME: ${{ github.ref_name }}
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_SHA: ${{ github.sha }}
-          GITHUB_REF: ${{ github.ref }}
 
-  build_release:
-    name: build_release
-    if: github.event_name == 'merge_group'
+  # CI + CD Release - tag v*-rc*
+  build_release_candidate:
+    name: CI/CD Release Candidate
+    if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle  # Built-in Gradle cache
-
+          cache: gradle
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
-          bundler-cache: true  # Built-in Bundler cache
-
-
       - name: Install Bundler 2.7.2
         run: gem install bundler:2.7.2
-
       - name: Install dependencies
-        run: bundle _2.7.2_ install --path vendor/bundle
-
-      - name: Create directories
-        run: |
-          mkdir -p app
-          mkdir -p fastlane
-
+        run: bundle _2.7.2_ install
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/ben-release-key.jks
-
       - name: Decode service account
         run: echo "${{ secrets.SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > fastlane/service_account.json
       - name: Build release with Fastlane
         run: bundle exec fastlane android release
         env:
           FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_DEV_CHAT_ID: ${{ secrets.TELEGRAM_DEV_CHAT_ID }}
-          TELEGRAM_TESTER_CHAT_ID: ${{ secrets.TELEGRAM_TESTER_CHAT_ID }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_DEV_CHAT_ID: ${{ secrets.TELEGRAM_DEV_CHAT_ID }}
+          TELEGRAM_TESTER_CHAT_ID: ${{ secrets.TELEGRAM_TESTER_CHAT_ID }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-          GITHUB_REF_NAME: ${{ github.ref_name }}
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_SHA: ${{ github.sha }}
-          GITHUB_REF: ${{ github.ref }}
 
-   # Fake CD Deploy Production
+  # CI + CD Production - merge to main
   deploy-production:
-    name: CD - Production (Manual Approval)
-    if: github.event_name == 'push'
+    name: CI/CD Production Deploy
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     environment:
@@ -120,27 +116,22 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle  # Built-in Gradle cache
-
+          cache: gradle
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
-          bundler-cache: true  # Built-in Bundler cache
-
       - name: Install Bundler 2.7.2
         run: gem install bundler:2.7.2
-
       - name: Install dependencies
-        run: bundle _2.7.2_ install --path vendor/bundle
-
-      - name: Fake production deploy
+        run: bundle _2.7.2_ install
+      - name: Production deploy (Play Store)
         run: |
           echo "🚀 Deploying to production..."
           echo "This is where Play Store upload would happen"
+          # bundle exec fastlane android deploy
