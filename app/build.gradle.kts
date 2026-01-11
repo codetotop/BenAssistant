@@ -47,6 +47,30 @@ android {
             '"' + getProperty("DEEPSEEK_API_KEY", "config property") + '"'
         )
 
+        buildConfigField(
+            "String",
+            "FIREBASE_APP_ID",
+            '"' + getProperty("FIREBASE_APP_ID", "config property") + '"'
+        )
+
+        buildConfigField(
+            "String",
+            "TELEGRAM_BOT_TOKEN",
+            '"' + getProperty("TELEGRAM_BOT_TOKEN", "config property") + '"'
+        )
+
+        buildConfigField(
+            "String",
+            "TELEGRAM_DEV_CHAT_ID",
+            '"' + getProperty("TELEGRAM_DEV_CHAT_ID", "config property") + '"'
+        )
+
+        buildConfigField(
+            "String",
+            "TELEGRAM_TESTER_CHAT_ID",
+            '"' + getProperty("TELEGRAM_TESTER_CHAT_ID", "config property") + '"'
+        )
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
