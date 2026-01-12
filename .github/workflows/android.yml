@@ -29,6 +29,8 @@ jobs:
         run: gem install bundler:2.7.2
       - name: Install dependencies
         run: bundle _2.7.2_ install
+      - name: Make gradlew executable
+        run: chmod +x gradlew
       - name: Decode service account
         run: echo "${{ secrets.SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > fastlane/service_account.json
       - name: Build test only
@@ -62,6 +64,8 @@ jobs:
         run: gem install bundler:2.7.2
       - name: Install dependencies
         run: bundle _2.7.2_ install
+      - name: Make gradlew executable
+        run: chmod +x gradlew
       - name: Decode service account
         run: echo "${{ secrets.SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > fastlane/service_account.json
       - name: Build Debug with Fastlane
@@ -73,6 +77,8 @@ jobs:
           TELEGRAM_TESTER_CHAT_ID: ${{ secrets.TELEGRAM_TESTER_CHAT_ID }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_ACTOR: ${{ github.actor }}
 
   # CI + CD Release - tag v*-rc*
   build_release_candidate:
@@ -95,6 +101,8 @@ jobs:
         run: gem install bundler:2.7.2
       - name: Install dependencies
         run: bundle _2.7.2_ install
+      - name: Make gradlew executable
+        run: chmod +x gradlew
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/ben-release-key.jks
       - name: Decode service account
@@ -111,6 +119,8 @@ jobs:
           TELEGRAM_TESTER_CHAT_ID: ${{ secrets.TELEGRAM_TESTER_CHAT_ID }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_ACTOR: ${{ github.actor }}
 
   # CI + CD Production - merge to main
   deploy-production:
