@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [ "v1.0.0" ]
   push:
-    branches: [ "v1.0.0", "main", "devDung" ]
+    branches: [ "v1.0.0", "main" ]
     tags: [ "v*-rc*" ]
 
 jobs:
