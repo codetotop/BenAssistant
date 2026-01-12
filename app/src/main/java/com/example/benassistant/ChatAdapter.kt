@@ -15,7 +15,8 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
         private const val USER = 0
-        private const val ASSISTANT = 1
+        private const val ASSISTANT = 2
+
     }
 
     private var messages = mutableListOf<ChatLog>()
