@@ -2,14 +2,12 @@ name: Android CI/CD
 
 on:
   pull_request:
-    branches: ["v1.0.0"]
+    branches: [ "v1.0.0" ]
   push:
-    branches: ["v1.0.0", "main"]
-    tags: ["v*-rc*"]
+    branches: [ "v1.0.0", "main" ]
+    tags: [ "v*-rc*" ]
 
 jobs:
-
-
   # CI only - push to v1.0.0
   ci_build:
     name: CI Build
@@ -31,9 +29,15 @@ jobs:
         run: gem install bundler:2.7.2
       - name: Install dependencies
         run: bundle _2.7.2_ install
+      - name: Decode service account
+        run: echo "${{ secrets.SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > fastlane/service_account.json
       - name: Build test only
         run: ./gradlew assembleDebug testDebugUnitTest
         env:
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_DEV_CHAT_ID: ${{ secrets.TELEGRAM_DEV_CHAT_ID }}
+          TELEGRAM_TESTER_CHAT_ID: ${{ secrets.TELEGRAM_TESTER_CHAT_ID }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
@@ -113,7 +117,6 @@ jobs:
     name: CI/CD Production Deploy
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-
     environment:
       name: production   # Manual: Pause deploy, waiting PM, Leader review...
 
