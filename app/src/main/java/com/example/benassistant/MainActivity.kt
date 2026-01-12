@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity(), MainContract.View {
 
     @SuppressLint("ClickableViewAccessibility")
     private fun initView() {
-        rootView = findViewById(R.id.main)
+        rootView = findViewById(R.id.rootView)
         recyclerView = findViewById(R.id.recyclerViewChat)
         inputLayout = findViewById(R.id.inputLayout)
         etInput = findViewById(R.id.etInput)
