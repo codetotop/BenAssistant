@@ -98,7 +98,7 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         private var currentRunnable: Runnable? = null
 
         fun bind(log: ChatLog) {
-            tvMessage.text = "" // Clear previous text
+            tvMessage.text = ""
 
             if (log.message == null && log.isNew) {
                 typingIndicator.visibility = View.VISIBLE
