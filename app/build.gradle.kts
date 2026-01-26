@@ -35,6 +35,31 @@ android {
         versionCode = 29
         versionName = "v1.0.0"
 
+        // build.gradle.kts (:app)
+        android {
+            flavorDimensions.add("env")
+            productFlavors {
+                create("dev") {
+                    dimension = "env"
+                    applicationIdSuffix = ".dev"
+                    versionNameSuffix = "-dev"
+                    buildConfigField("String", "BASE_URL", "\"api-dev.vn\"")
+                }
+                create("staging") {
+                    dimension = "env"
+                    applicationIdSuffix = ".stg"
+                    versionNameSuffix = "-stg"
+                    buildConfigField("String", "BASE_URL", "\"api-stg.vn\"")
+                }
+                create("prod") {
+                    dimension = "env"
+                    // Production không có suffix để giữ Package Name chuẩn
+                    buildConfigField("String", "BASE_URL", "\"api.vn\"")
+                }
+            }
+        }
+
+
         buildConfigField(
             "String",
             "OPENAI_API_KEY",

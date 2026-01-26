@@ -62,36 +62,16 @@ platform :android do
       build_type = options[:build_type]
       info = options[:info]
 
-      # Dev message
-      dev_msg = "#{build_type == 'DEBUG' ? '✅' : '🎉'} *#{build_type} Build Success!*\\n\\n" \
-               "📱 *Version:* #{info[:version_info]}\\n🌿 *Branch:* #{ENV['GITHUB_REF_NAME']}\\n" \
-               "👨‍💻 *Author:* #{ENV['GITHUB_ACTOR']}\\n\\n🔗 [Download APK](#{info[:download_url]})"
-
-      # Tester message
-      tester_msg = "#{build_type == 'DEBUG' ? '✅ *Debug Build Ready!*' : '🎉 *Release Build Ready!*'}\\n\\n" \
-                  "📱 *Version:* #{info[:version_info]}\\n🌿 *Branch:* #{ENV['GITHUB_REF_NAME']}\\n\\n" \
-                  "🔗 [Download APK](#{info[:download_url]})\\n\\n" \
-                  "📋 #{build_type == 'DEBUG' ? 'Test all features and report issues' : 'Final QA before production'}"
-
       send_telegram_notification(chat_id: ENV['TELEGRAM_DEV_CHAT_ID'], message: dev_msg)
-      send_telegram_notification(chat_id: ENV['TELEGRAM_TESTER_CHAT_ID'], message: tester_msg)
-    else
+      dev_msg = "#{build_type == 'DEBUG' ? '✅' : '🎉'} *#{build_type} Build Success!*\\n\\n" \
       # Failure notification
       error_msg = options[:error].to_s.gsub(/[_*\[\]()~`>#+=|{}.!-]/) { |match| "\\#{match}" }
       error_msg = error_msg[0..300] + "..." if error_msg.length > 300
 
-      failure_msg = "🔴 *#{options[:build_type]} Build Failed!*\\n\\n" \
-                   "🌿 *Branch:* #{ENV['GITHUB_REF_NAME'] || 'local'}\\n" \
-                   "👨‍💻 *Author:* #{ENV['GITHUB_ACTOR'] || 'local'}\\n\\n" \
-                   "❌ *Error:* #{error_msg}\\n\\n🔍 Check logs for details"
-
-      send_telegram_notification(chat_id: ENV['TELEGRAM_DEV_CHAT_ID'], message: failure_msg)
-    end
-  end
-
+      tester_msg = "#{build_type == 'DEBUG' ? '✅ *Debug Build Ready!*' : '🎉 *Release Build Ready!*'}\\n\\n" \
   # Main build lanes
   desc "Build debug APK and upload to Firebase"
-  lane :debug do
+                  "📋 #{build_type == 'DEBUG' ? 'Test all features and report issues' : 'Final QA before production'}"
     begin
       UI.message("🔧 Starting debug build...")
       gradle(task: "test")
@@ -99,10 +79,8 @@ platform :android do
 
       info = upload_to_firebase(build_type: "DEBUG")
       notify_build_result(success: true, build_type: "DEBUG", info: info)
-
       UI.success("✅ Debug build completed!")
     rescue => e
-      notify_build_result(success: false, build_type: "Debug", error: e)
       raise e
     end
   end
