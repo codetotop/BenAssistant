@@ -11,7 +11,7 @@ jobs:
   # CI only - push to v*.*.*
   ci_build:
     name: CI Build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/v1.0.0'
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,7 +34,7 @@ jobs:
       - name: Decode service account
         run: echo "${{ secrets.SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > fastlane/service_account.json
       - name: Build test only
-        run: ./gradlew assembleDebug testDebugUnitTest
+        run: ./gradlew assembleDebug testDevDebugUnitTest
         env:
           FIREBASE_APP_ID_DEV: ${{ secrets.FIREBASE_APP_ID_DEV }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -46,7 +46,7 @@ jobs:
   # CI + CD Debug - PR from feature branch to v*.*.*
   build_debug:
     name: CI/CD Debug
-    if: github.event_name == 'pull_request' && github.base_ref == 'v1.0.0'
+    if: github.event_name == 'pull_request' && startsWith(github.base_ref, 'v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -122,10 +122,10 @@ jobs:
           GITHUB_REF_NAME: ${{ github.ref_name }}
           GITHUB_ACTOR: ${{ github.actor }}
 
-  # CI + CD Production - merge to main
+  # CI + CD Production - push to main
   deploy-production:
     name: CI/CD Production Deploy
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: production   # Manual: Pause deploy, waiting PM, Leader review...
