@@ -19,14 +19,18 @@ if (localPropertiesFile.exists()) {
     }
 }
 
+// Helpers to read config safely
+fun getOptional(key: String): String? =
+    System.getenv(key) ?: project.findProperty(key) as? String
+
+fun requireProp(key: String, type: String = "config property"): String =
+    getOptional(key) ?: throw GradleException("Missing $type: $key")
+
+fun quoted(value: String?): String = '"' + (value ?: "") + '"'
+
 android {
     namespace = "com.example.benassistant"
     compileSdk = 36
-
-    fun getProperty(key: String, type: String = "property"): String =
-        System.getenv(key)
-            ?: project.findProperty(key) as? String
-            ?: throw GradleException("Missing $type: $key")
 
     defaultConfig {
         applicationId = "com.example.benassistant"
@@ -35,53 +39,15 @@ android {
         versionCode = 29
         versionName = "v1.0.0"
 
-        buildConfigField(
-            "String",
-            "OPENAI_API_KEY",
-            '"' + getProperty("OPENAI_API_KEY", "config property") + '"'
-        )
-
-        buildConfigField(
-            "String",
-            "DEEPSEEK_API_KEY",
-            '"' + getProperty("DEEPSEEK_API_KEY", "config property") + '"'
-        )
-
-        buildConfigField(
-            "String",
-            "FIREBASE_APP_ID_DEV",
-            '"' + getProperty("FIREBASE_APP_ID_DEV", "config property") + '"'
-        )
-
-        buildConfigField(
-            "String",
-            "FIREBASE_APP_ID_STAGING",
-            '"' + getProperty("FIREBASE_APP_ID_STAGING", "config property") + '"'
-        )
-
-        buildConfigField(
-            "String",
-            "FIREBASE_APP_ID_PROD",
-            '"' + getProperty("FIREBASE_APP_ID_PROD", "config property") + '"'
-        )
-
-        buildConfigField(
-            "String",
-            "TELEGRAM_BOT_TOKEN",
-            '"' + getProperty("TELEGRAM_BOT_TOKEN", "config property") + '"'
-        )
-
-        buildConfigField(
-            "String",
-            "TELEGRAM_DEV_CHAT_ID",
-            '"' + getProperty("TELEGRAM_DEV_CHAT_ID", "config property") + '"'
-        )
-
-        buildConfigField(
-            "String",
-            "TELEGRAM_TESTER_CHAT_ID",
-            '"' + getProperty("TELEGRAM_TESTER_CHAT_ID", "config property") + '"'
-        )
+        // Use optional values for CI/test builds to avoid configuration-time failures
+        buildConfigField("String", "OPENAI_API_KEY", quoted(getOptional("OPENAI_API_KEY")))
+        buildConfigField("String", "DEEPSEEK_API_KEY", quoted(getOptional("DEEPSEEK_API_KEY")))
+        buildConfigField("String", "FIREBASE_APP_ID_DEV", quoted(getOptional("FIREBASE_APP_ID_DEV")))
+        buildConfigField("String", "FIREBASE_APP_ID_STAGING", quoted(getOptional("FIREBASE_APP_ID_STAGING")))
+        buildConfigField("String", "FIREBASE_APP_ID_PROD", quoted(getOptional("FIREBASE_APP_ID_PROD")))
+        buildConfigField("String", "TELEGRAM_BOT_TOKEN", quoted(getOptional("TELEGRAM_BOT_TOKEN")))
+        buildConfigField("String", "TELEGRAM_DEV_CHAT_ID", quoted(getOptional("TELEGRAM_DEV_CHAT_ID")))
+        buildConfigField("String", "TELEGRAM_TESTER_CHAT_ID", quoted(getOptional("TELEGRAM_TESTER_CHAT_ID")))
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -108,12 +74,13 @@ android {
     }
 
     signingConfigs {
+        // Only configure release signing when credentials are present
         if (project.hasProperty("KEYSTORE_PASSWORD") || System.getenv("KEYSTORE_PASSWORD") != null) {
             create("release") {
                 storeFile = file("ben-release-key.jks")
-                storePassword = getProperty("KEYSTORE_PASSWORD", "signing property")
-                keyAlias = getProperty("KEY_ALIAS", "signing property")
-                keyPassword = getProperty("KEY_PASSWORD", "signing property")
+                storePassword = requireProp("KEYSTORE_PASSWORD", "signing property")
+                keyAlias = requireProp("KEY_ALIAS", "signing property")
+                keyPassword = requireProp("KEY_PASSWORD", "signing property")
             }
         }
     }
@@ -140,12 +107,13 @@ android {
         buildConfig = true
     }
 
+    // Bump Java toolchain to 17 to match AGP requirements on CI
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
 }
 

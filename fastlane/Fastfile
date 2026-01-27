@@ -4,23 +4,27 @@ platform :android do
   # Notification functions
   desc "Send Telegram notification"
   private_lane :send_telegram_notification do |options|
-    sh("curl -X POST 'https://api.telegram.org/bot#{ENV['TELEGRAM_BOT_TOKEN']}/sendMessage' \
-       -H 'Content-Type: application/json' \
-       -d '{
-         \"chat_id\": \"#{options[:chat_id]}\",
-         \"text\": \"#{options[:message]}\",
-         \"parse_mode\": \"Markdown\",
-         \"disable_web_page_preview\": false
-       }'")
+    sh(
+      "curl -X POST 'https://api.telegram.org/bot#{ENV['TELEGRAM_BOT_TOKEN']}/sendMessage' " \
+      "-H 'Content-Type: application/json' " \
+      "-d '{" \
+      "  \"chat_id\": \"#{options[:chat_id]}\"," \
+      "  \"text\": \"#{options[:message]}\"," \
+      "  \"parse_mode\": \"Markdown\"," \
+      "  \"disable_web_page_preview\": false" \
+      "}'"
+    )
   end
 
   # Update link helper to accept app_id
   desc "Get Firebase download link with release ID"
   private_lane :get_firebase_link do |firebase_result, app_id|
     # Extract release ID from Firebase response
-    release_id = firebase_result.is_a?(Hash) ?
-      (firebase_result[:name]&.split('/')&.last ||
-       Actions.lane_context[SharedValues::FIREBASE_APP_DISTRO_RELEASE]) : nil
+    release_id = if firebase_result.is_a?(Hash)
+      firebase_result[:name]&.split('/')&.last || Actions.lane_context[SharedValues::FIREBASE_APP_DISTRO_RELEASE]
+    else
+      nil
+    end
 
     if release_id && !release_id.empty?
       link = "https://appdistribution.firebase.google.com/testerapps/#{app_id}/releases/#{release_id}"
@@ -50,10 +54,8 @@ platform :android do
     notes = sh("git log -1 --pretty=%B").strip
     notes = "No release notes provided." if notes.empty?
 
-    version_code = android_get_version_code(gradle_file: "app/build.gradle.kts") ||
-                  sh("git rev-list --count HEAD").strip
-    version_name = android_get_version_name(gradle_file: "app/build.gradle.kts") ||
-                  (sh("git describe --tags --abbrev=0").strip rescue "0.1.0-dev")
+    version_code = android_get_version_code(gradle_file: "app/build.gradle.kts") || sh("git rev-list --count HEAD").strip
+    version_name = android_get_version_name(gradle_file: "app/build.gradle.kts") || (sh("git describe --tags --abbrev=0").strip rescue "0.1.0-dev")
 
     app_id = resolve_app_id(flavor: options[:flavor] || 'dev')
     UI.user_error!("Missing FIREBASE_APP_ID for flavor #{options[:flavor] || 'prod'}") unless app_id && !app_id.empty?
@@ -77,14 +79,21 @@ platform :android do
       build_type = options[:build_type]
       info = options[:info]
 
-      dev_msg = "#{build_type == 'DEBUG' ? '✅' : '🎉'} *#{build_type} Build Success!*\\n\\n" \
-                "📱 Version: #{info[:version_info]}\\n" \
-                "🔗 Download: #{info[:download_url]}"
+      dev_msg = (
+        (build_type == 'DEBUG' ? '✅' : '🎉') + " *#{build_type} Build Success!*\n\n" +
+        "📱 *Version:* #{info[:version_info]}\n" +
+        "🌿 *Branch:* #{ENV['GITHUB_REF_NAME']}\n\n" +
+        "🔗 [Download APK](#{info[:download_url]})\n\n" +
+        "📋 #{build_type == 'DEBUG' ? 'Test all features and report issues' : 'Final QA before production'}"
+      )
 
-      tester_msg = "#{build_type == 'DEBUG' ? '✅ *Debug Build Ready!*' : '🎉 *Release Build Ready!*'}\\n\\n" \
-                   "📱 Version: #{info[:version_info]}\\n" \
-                   "🔗 Download: #{info[:download_url]}\\n\\n" \
-                   "📋 #{build_type == 'DEBUG' ? 'Test all features and report issues' : 'Final QA before production'}"
+      tester_msg = (
+        (build_type == 'DEBUG' ? '✅ *Debug Build Ready!*' : '🎉 *Release Build Ready!*') + "\n\n" +
+        "📱 *Version:* #{info[:version_info]}\n" +
+        "🌿 *Branch:* #{ENV['GITHUB_REF_NAME']}\n\n" +
+        "🔗 [Download APK](#{info[:download_url]})\n\n" +
+        "📋 #{build_type == 'DEBUG' ? 'Test all features and report issues' : 'Final QA before production'}"
+      )
 
       send_telegram_notification(chat_id: ENV['TELEGRAM_DEV_CHAT_ID'], message: dev_msg)
       send_telegram_notification(chat_id: ENV['TELEGRAM_TESTER_CHAT_ID'], message: tester_msg)
@@ -94,9 +103,11 @@ platform :android do
       error_msg = options[:error].to_s.gsub(/[_*\[\]()~`>#+=|{}.!-]/) { |match| "\\#{match}" }
       error_msg = error_msg[0..300] + "..." if error_msg.length > 300
 
-      failure_msg = "❌ *#{build_type} Build Failed!*\\n\\n" \
-                    "⚠️ Error: #{error_msg}\\n\\n" \
-                    "🔍 Check the CI logs for details"
+      failure_msg = (
+        "❌ *#{build_type} Build Failed!*\n\n" +
+        "⚠️ Error: #{error_msg}\n\n" +
+        "🔍 Check the CI logs for details"
+      )
 
       send_telegram_notification(chat_id: ENV['TELEGRAM_DEV_CHAT_ID'], message: failure_msg)
     end
@@ -113,10 +124,10 @@ platform :android do
     notify_build_result(success: true, build_type: "DEBUG", info: info)
   end
 
-  desc "Build prod release APK and upload to Firebase"
+  desc "Build staging release APK and upload to Firebase"
   lane :release do
-    UI.message("🚀 Starting prod release build...")
-    gradle(task: "assembleStagingDebug")
+    UI.message("🚀 Starting staging release build...")
+    gradle(task: "assembleStagingRelease")
 
     info = upload_to_firebase(build_type: "RELEASE", flavor: "staging")
     notify_build_result(success: true, build_type: "RELEASE", info: info)
@@ -132,7 +143,7 @@ platform :android do
   end
 
   lane :build_release do
-    gradle(task: "assembleStagingDebug")
+    gradle(task: "assembleStagingRelease")
   end
 
   desc "Deploy to Google Play"
