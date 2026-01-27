@@ -2,13 +2,13 @@ name: Android CI/CD
 
 on:
   pull_request:
-    branches: [ "v1.0.0" ]
+    branches: [ "v*.*.*" ]
   push:
-    branches: [ "v1.0.0", "main" ]
+    branches: [ "v*.*.*", "main" ]
     tags: [ "v*-rc*" ]
 
 jobs:
-  # CI only - push to v1.0.0
+  # CI only - push to v*.*.*
   ci_build:
     name: CI Build
     if: github.event_name == 'push' && github.ref == 'refs/heads/v1.0.0'
@@ -36,14 +36,14 @@ jobs:
       - name: Build test only
         run: ./gradlew assembleDebug testDebugUnitTest
         env:
-          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_APP_ID_DEV: ${{ secrets.FIREBASE_APP_ID_DEV }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_DEV_CHAT_ID: ${{ secrets.TELEGRAM_DEV_CHAT_ID }}
           TELEGRAM_TESTER_CHAT_ID: ${{ secrets.TELEGRAM_TESTER_CHAT_ID }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
-  # CI + CD Debug - PR from feature branch to v1.0.0
+  # CI + CD Debug - PR from feature branch to v*.*.*
   build_debug:
     name: CI/CD Debug
     if: github.event_name == 'pull_request' && github.base_ref == 'v1.0.0'
@@ -71,7 +71,7 @@ jobs:
       - name: Build Debug with Fastlane
         run: bundle exec fastlane android debug
         env:
-          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_APP_ID_DEV: ${{ secrets.FIREBASE_APP_ID_DEV }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_DEV_CHAT_ID: ${{ secrets.TELEGRAM_DEV_CHAT_ID }}
           TELEGRAM_TESTER_CHAT_ID: ${{ secrets.TELEGRAM_TESTER_CHAT_ID }}
@@ -110,7 +110,7 @@ jobs:
       - name: Build release with Fastlane
         run: bundle exec fastlane android release
         env:
-          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_APP_ID_STAGING: ${{ secrets.FIREBASE_APP_ID_STAGING }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
