@@ -32,6 +32,8 @@ fastlane/test_output/
 
 # Firebase/Google Services
 app/google-services.json
+app/dev/google-services.json
+app/staging/google-services.json
 fastlane/*.json
 
 # Misc

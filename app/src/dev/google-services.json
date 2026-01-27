@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1074263516470",
+    "project_id": "ben-ai-assistant",
+    "storage_bucket": "ben-ai-assistant.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1074263516470:android:e416942e842cbf8fa43f97",
+        "android_client_info": {
+          "package_name": "com.example.benassistant"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAT21tQQM56LPAEtck8HLbEwv8FoJ_lzbE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1074263516470:android:49340dc452e0bd85a43f97",
+        "android_client_info": {
+          "package_name": "com.example.benassistant.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAT21tQQM56LPAEtck8HLbEwv8FoJ_lzbE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

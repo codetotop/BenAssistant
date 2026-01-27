@@ -14,22 +14,34 @@ platform :android do
        }'")
   end
 
+  # Update link helper to accept app_id
   desc "Get Firebase download link with release ID"
-  private_lane :get_firebase_link do |firebase_result|
+  private_lane :get_firebase_link do |firebase_result, app_id|
     # Extract release ID from Firebase response
     release_id = firebase_result.is_a?(Hash) ?
       (firebase_result[:name]&.split('/')&.last ||
        Actions.lane_context[SharedValues::FIREBASE_APP_DISTRO_RELEASE]) : nil
 
     if release_id && !release_id.empty?
-      app_id = ENV['FIREBASE_APP_ID']
       link = "https://appdistribution.firebase.google.com/testerapps/#{app_id}/releases/#{release_id}"
       UI.message("✅ Direct testerapps link: #{link}")
       link
     else
-      link = "https://appdistribution.firebase.google.com/pub/i/#{ENV['FIREBASE_APP_ID']}"
+      link = "https://appdistribution.firebase.google.com/pub/i/#{app_id}"
       UI.message("⚠️ Using fallback public link: #{link}")
       link
+    end
+  end
+
+  private_lane :resolve_app_id do |options|
+    flavor = options[:flavor]
+    case flavor
+    when 'dev'
+      ENV['FIREBASE_APP_ID_DEV'] || ENV['FIREBASE_APP_ID']
+    when 'staging'
+      ENV['FIREBASE_APP_ID_STAGING'] || ENV['FIREBASE_APP_ID']
+    else # 'prod'
+      ENV['FIREBASE_APP_ID_PROD'] || ENV['FIREBASE_APP_ID']
     end
   end
 
@@ -43,15 +55,18 @@ platform :android do
     version_name = android_get_version_name(gradle_file: "app/build.gradle.kts") ||
                   (sh("git describe --tags --abbrev=0").strip rescue "0.1.0-dev")
 
+    app_id = resolve_app_id(flavor: options[:flavor] || 'dev')
+    UI.user_error!("Missing FIREBASE_APP_ID for flavor #{options[:flavor] || 'prod'}") unless app_id && !app_id.empty?
+
     result = firebase_app_distribution(
-      app: ENV['FIREBASE_APP_ID'],
+      app: app_id,
       service_credentials_file: File.expand_path("service_account.json", __dir__),
       testers: "dungnb@nal.vn, dungletk2109@gmail.com",
       release_notes: "[#{options[:build_type]} BUILD] Version: #{version_name} (#{version_code})\n#{notes}"
     )
 
     {
-      download_url: get_firebase_link(result),
+      download_url: get_firebase_link(result, app_id),
       version_info: "#{version_name} (#{version_code})"
     }
   end
@@ -88,35 +103,23 @@ platform :android do
   end
 
   # Main build lanes
-  desc "Build debug APK and upload to Firebase"
+  desc "Build dev debug APK and upload to Firebase"
   lane :debug do
-    begin
-      UI.message("🔧 Starting debug build...")
-      gradle(task: "test")
-      gradle(task: "assembleDebug")
+    UI.message("🔧 Starting dev debug build...")
+    gradle(task: "test")
+    gradle(task: "assembleDevDebug")
 
-      info = upload_to_firebase(build_type: "DEBUG")
-      notify_build_result(success: true, build_type: "DEBUG", info: info)
-      UI.success("✅ Debug build completed!")
-    rescue => e
-      raise e
-    end
+    info = upload_to_firebase(build_type: "DEBUG", flavor: "dev")
+    notify_build_result(success: true, build_type: "DEBUG", info: info)
   end
 
-  desc "Build release APK and upload to Firebase"
+  desc "Build prod release APK and upload to Firebase"
   lane :release do
-    begin
-      UI.message("🚀 Starting release build...")
-      gradle(task: "assembleRelease")
+    UI.message("🚀 Starting prod release build...")
+    gradle(task: "assembleStagingDebug")
 
-      info = upload_to_firebase(build_type: "RELEASE")
-      notify_build_result(success: true, build_type: "RELEASE", info: info)
-
-      UI.success("✅ Release build completed!")
-    rescue => e
-      notify_build_result(success: false, build_type: "Release", error: e)
-      raise e
-    end
+    info = upload_to_firebase(build_type: "RELEASE", flavor: "staging")
+    notify_build_result(success: true, build_type: "RELEASE", info: info)
   end
 
   # Legacy lanes for compatibility
@@ -125,11 +128,11 @@ platform :android do
   end
 
   lane :build_debug do
-    gradle(task: "assembleDebug")
+    gradle(task: "assembleDevDebug")
   end
 
   lane :build_release do
-    gradle(task: "assembleRelease")
+    gradle(task: "assembleStagingDebug")
   end
 
   desc "Deploy to Google Play"

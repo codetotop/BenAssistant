@@ -36,7 +36,7 @@ jobs:
       - name: Build test only
         run: ./gradlew assembleDebug testDebugUnitTest
         env:
-          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_APP_ID_DEV: ${{ secrets.FIREBASE_APP_ID_DEV }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_DEV_CHAT_ID: ${{ secrets.TELEGRAM_DEV_CHAT_ID }}
           TELEGRAM_TESTER_CHAT_ID: ${{ secrets.TELEGRAM_TESTER_CHAT_ID }}
@@ -71,7 +71,7 @@ jobs:
       - name: Build Debug with Fastlane
         run: bundle exec fastlane android debug
         env:
-          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_APP_ID_DEV: ${{ secrets.FIREBASE_APP_ID_DEV }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_DEV_CHAT_ID: ${{ secrets.TELEGRAM_DEV_CHAT_ID }}
           TELEGRAM_TESTER_CHAT_ID: ${{ secrets.TELEGRAM_TESTER_CHAT_ID }}
@@ -110,7 +110,7 @@ jobs:
       - name: Build release with Fastlane
         run: bundle exec fastlane android release
         env:
-          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_APP_ID_STAGING: ${{ secrets.FIREBASE_APP_ID_STAGING }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
