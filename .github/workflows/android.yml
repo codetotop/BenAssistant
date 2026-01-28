@@ -34,7 +34,7 @@ jobs:
       - name: Decode service account
         run: echo "${{ secrets.SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > fastlane/service_account.json
       - name: Build test only
-        run: ./gradlew assembleDebug testDevDebugUnitTest
+        run: bundle exec fastlane android test
         env:
           FIREBASE_APP_ID_DEV: ${{ secrets.FIREBASE_APP_ID_DEV }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
