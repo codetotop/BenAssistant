@@ -4,16 +4,14 @@ platform :android do
   # Notification functions
   desc "Send Telegram notification"
   private_lane :send_telegram_notification do |options|
-    sh(
-      "curl -X POST 'https://api.telegram.org/bot#{ENV['TELEGRAM_BOT_TOKEN']}/sendMessage' " \
-      "-H 'Content-Type: application/json' " \
-      "-d '{" \
-      "  \"chat_id\": \"#{options[:chat_id]}\"," \
-      "  \"text\": \"#{options[:message]}\"," \
-      "  \"parse_mode\": \"Markdown\"," \
-      "  \"disable_web_page_preview\": false" \
-      "}'"
-    )
+    payload = {
+      chat_id: options[:chat_id],
+      text: options[:message],
+      parse_mode: "Markdown",
+      disable_web_page_preview: false
+    }.to_json
+
+    sh("curl -X POST https://api.telegram.org/bot#{ENV['TELEGRAM_BOT_TOKEN']}/sendMessage -H 'Content-Type: application/json' -d '#{payload}'")
   end
 
   # Update link helper to accept app_id
@@ -114,10 +112,16 @@ platform :android do
   end
 
   # Main build lanes
+  desc "Run unit tests for dev debug only"
+  lane :test do
+    gradle(tasks: ["cleanTest"])
+    gradle(tasks: ["testDevDebugUnitTest"], print_command: true)
+  end
+
   desc "Build dev debug APK and upload to Firebase"
   lane :debug do
     UI.message("🔧 Starting dev debug build...")
-    gradle(task: "test")
+    test
     gradle(task: "assembleDevDebug")
 
     info = upload_to_firebase(build_type: "DEBUG", flavor: "dev")
@@ -131,19 +135,6 @@ platform :android do
 
     info = upload_to_firebase(build_type: "RELEASE", flavor: "staging")
     notify_build_result(success: true, build_type: "RELEASE", info: info)
-  end
-
-  # Legacy lanes for compatibility
-  lane :build_test do
-    gradle(task: "test")
-  end
-
-  lane :build_debug do
-    gradle(task: "assembleDevDebug")
-  end
-
-  lane :build_release do
-    gradle(task: "assembleStagingRelease")
   end
 
   desc "Deploy to Google Play"
